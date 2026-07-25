@@ -38,15 +38,27 @@ unlike raw tracking, which is only available as a frozen 2015-16 archive (see
 ```
 python/01_harvest_pbp.py   stats.nba.com -> data/raw_pbp/<game_id>.parquet  (resumable)
 python/02_analysis.py      -> output/*.csv, figures/*.png + *.html
+R/02_analysis.R            independent R/tidyverse implementation -> output/*_r.csv
+python/04_reconcile.py     compares the two row-by-row, non-zero exit on mismatch
 python/03_findings.py      -> writes the Findings section of this README
 ```
 
 ```bash
 pip install nba_api polars plotly kaleido numpy pyarrow
+Rscript -e 'install.packages(c("tidyverse","nanoparquet"))'
 python python/01_harvest_pbp.py --season 2023-24   # ~20 min, rate-limited
 python python/02_analysis.py
+Rscript R/02_analysis.R
+python python/04_reconcile.py   # exits non-zero if the two disagree
 python python/03_findings.py
 ```
+
+The reconciliation is not ceremonial. The Python implementation originally
+sorted events by `actionNumber` **as text** — `"100"` before `"2"` — which
+scrambled the score forward-fill and corrupted every window score. The bug was
+caught in review by re-deriving the table with a numeric sort; the independent
+R implementation now guards that class of error permanently, the same
+discipline as `../jersey-height-study`.
 
 One parquet per game, so an interrupted harvest resumes and the analysis never
 re-hits the network.
@@ -61,6 +73,7 @@ re-hits the network.
 | Window | **final 60 seconds** | Wide enough to contain the whole decision, narrow enough that the rest of the quarter does not dilute it |
 | Treatment | **first FGA at ≥ 32s** | Conventional threshold: enough for a 24-second opponent possession plus a final possession of your own |
 | Outcome | **score delta**, not summed shot values | Free throws in this feed carry an *empty* `shotResult`, so summing shot values would silently drop every and-1 and shooting foul. Score deltas capture all scoring |
+| Second outcome | **net points** (own minus opponent, same window) | Holding for the last shot is valuable *because it denies the opponent a reply* — an own-points outcome misses the entire cost side of the trade. Both outcomes are reported |
 | Score handling | forward-fill across the game | Scores are only stamped on scoring events; the fill runs across the whole game, not within period, because periods start from the running total |
 | Uncertainty | **bootstrap**, not a t-test | Points in a 60-second window are a small, lumpy, non-normal count (0, 2, 3, 5…) |
 | Unit of analysis | team-period | One row per team per period, not per game |
@@ -121,18 +134,28 @@ special happened at 32. That discontinuity is the behaviour itself, visible in t
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 
-### 2. The 2-for-1 is associated with more points
+### 2. The 2-for-1 is associated with more points — on both sides of the ball
 
 | | First shot ≥ 32s (2-for-1) | First shot < 32s (held) |
 |---|---|---|
 | Team-periods | 5,614 | 1,607 |
-| Mean points in window | **1.558** | **1.203** |
+| Mean points in window | **2.347** | **1.767** |
+| Mean opponent points | **2.183** | **2.283** |
+| Mean **net** points | **+0.163** | **-0.516** |
 | Mean field-goal attempts | **2.47** | **1.52** |
 | Effective FG% | **0.506** | **0.436** |
 
-Difference: **+0.355 points** per team-period
-(95% bootstrap CI [+0.254, +0.454], excludes zero,
+Own-points difference: **+0.579** per team-period
+(95% bootstrap CI [+0.475, +0.679], excludes zero,
 4,000 resamples).
+
+**Why net matters:** the case for holding the ball is precisely that it denies
+the opponent a reply, so an outcome that only counts a team's own points misses
+half the trade. On net points the raw gap is **+0.679**
+(95% CI [+0.544, +0.816]) — but read the
+sensitivity analysis below before taking either raw gap at face value, because
+the "held" group includes many team-periods where the *opponent* controlled the
+window.
 
 The mechanism is visible in the FGA row: roughly
 **+0.94 extra shots** per window. That is the extra
@@ -140,9 +163,9 @@ possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the gap is **+0.229 points** (95% CI [+0.086, +0.367], excludes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the own-points gap is **+0.364** (95% CI [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% CI [-0.002, +0.375], includes zero; n = 2,199 vs 842).
 
-The effect shrinks under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. It does not vanish.
+Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.
 
 ### 3. The expected cost never appears
 
@@ -186,6 +209,9 @@ gotten a stop, and may be in transition against an unset defense.
 
 The sensitivity analysis narrows that gap but does not close it. The honest
 statement is: **teams that shoot early score more in the window, the extra
-possession is real and measurable, and the usual objection to the strategy is not
-visible in the data.** A causal estimate would need possession-level tracking of
-when each team actually gained the ball, which is the natural next step.
+possession is real and measurable, and the usual objection to the strategy — a
+rushed, bad shot — is not visible in the data. What limits the payoff is not
+shot quality but the opponent's reply: on a net basis, in the comparable
+sample, one season of data cannot cleanly distinguish the advantage from
+zero.** A causal estimate would need possession-level tracking of when each
+team actually gained the ball, which is the natural next step.

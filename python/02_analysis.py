@@ -96,6 +96,11 @@ def load_events() -> pl.DataFrame:
 
     df = df.with_columns(
         period=pl.col("period").cast(pl.Int32),
+        # The feed delivers every column as text. actionNumber MUST be cast
+        # before sorting: lexicographic order puts "100" before "2", which
+        # scrambles the score forward-fill and corrupts every window score.
+        # (Caught in review by re-deriving the table with a numeric sort.)
+        actionNumber=pl.col("actionNumber").cast(pl.Int64),
         secs_left=(mins * 60 + secs),
         is_fga=(pl.col("isFieldGoal") == "1"),
         made=(pl.col("shotResult") == "Made"),
@@ -168,6 +173,19 @@ def main() -> int:
                         two_for_one=pl.col("first_fga_sec") >= TWO_FOR_ONE_SEC,
                         efg=(pl.col("fgm") + 0.5 * pl.col("fg3m")) / pl.col("n_fga"),
                     ))
+    # The tactic's real payoff is NET: holding for the last shot is valuable
+    # precisely because it denies the opponent a reply, so an outcome that only
+    # counts a team's own points misses half the trade. Attach what the opponent
+    # scored in the same window (pts covers both sides of every period, so this
+    # join is complete even when the opponent never attempted a shot).
+    opp = (pts.with_columns(
+               location=pl.when(pl.col("location") == "h")
+                          .then(pl.lit("v")).otherwise(pl.lit("h")))
+           .rename({"points": "opp_points"}))
+    team_periods = (team_periods
+                    .join(opp, on=["gameId", "period", "location"], how="left")
+                    .with_columns(net=pl.col("points") - pl.col("opp_points")))
+    assert team_periods["opp_points"].null_count() == 0, "opponent points join incomplete"
     team_periods.write_csv(OUT / "team_period_windows.csv")
     print(f"{team_periods.height:,} team-periods with at least one shot in the "
           f"final {WINDOW_SEC:.0f}s of Q1-Q3")
@@ -182,6 +200,8 @@ def main() -> int:
     summary = (team_periods.group_by("two_for_one")
                .agg(team_periods_n=pl.len(),
                     mean_points=pl.col("points").mean(),
+                    mean_opp_points=pl.col("opp_points").mean(),
+                    mean_net=pl.col("net").mean(),
                     mean_fga=pl.col("n_fga").mean().alias("mean_fga"),
                     mean_efg=(pl.col("fgm").sum() + 0.5 * pl.col("fg3m").sum())
                               / pl.col("n_fga").sum())
@@ -195,24 +215,34 @@ def main() -> int:
               f"points={row['mean_points']:.3f}  "
               f"FGA={row['mean_fga']:.2f}  eFG%={row['mean_efg']:.3f}")
 
-    a = team_periods.filter(pl.col("two_for_one"))["points"].to_numpy()
-    b = team_periods.filter(~pl.col("two_for_one"))["points"].to_numpy()
-    diff = a.mean() - b.mean()
-
     # Bootstrap rather than a t-test: points in a 60-second window are a small,
-    # lumpy, non-normal count (0, 2, 3, 5...).
-    rng = np.random.default_rng(2026)
-    boots = np.array([
-        rng.choice(a, len(a), replace=True).mean() - rng.choice(b, len(b), replace=True).mean()
-        for _ in range(4000)
-    ])
-    lo, hi = np.quantile(boots, [0.025, 0.975])
-    print(f"\n  Difference (2-for-1 minus hold): {diff:+.3f} points")
-    print(f"  95% bootstrap CI: [{lo:+.3f}, {hi:+.3f}]  "
-          f"({'excludes' if (lo > 0 or hi < 0) else 'includes'} zero)")
-    pl.DataFrame([{"quantity": "points_diff_2for1_minus_hold", "estimate": float(diff),
-                   "ci_lo": float(lo), "ci_hi": float(hi), "reps": len(boots)}]
+    # lumpy, non-normal count (0, 2, 3, 5...). Both outcomes are bootstrapped:
+    # `points` (own scoring — the mechanism) and `net` (own minus opponent — the
+    # payoff, since holding is valuable precisely because it denies a reply).
+    def boot_diff(frame: pl.DataFrame, outcome: str, seed: int) -> dict:
+        a = frame.filter(pl.col("two_for_one"))[outcome].to_numpy()
+        b = frame.filter(~pl.col("two_for_one"))[outcome].to_numpy()
+        rng = np.random.default_rng(seed)
+        boots = np.array([
+            rng.choice(a, len(a), replace=True).mean()
+            - rng.choice(b, len(b), replace=True).mean()
+            for _ in range(4000)
+        ])
+        lo, hi = np.quantile(boots, [0.025, 0.975])
+        return {"estimate": float(a.mean() - b.mean()), "ci_lo": float(lo),
+                "ci_hi": float(hi), "reps": len(boots),
+                "n_treated": len(a), "n_control": len(b)}
+
+    full_pts = boot_diff(team_periods, "points", seed=2026)
+    full_net = boot_diff(team_periods, "net", seed=2027)
+    print(f"\n  Own-points gap (2-for-1 minus hold): {full_pts['estimate']:+.3f} "
+          f"[{full_pts['ci_lo']:+.3f}, {full_pts['ci_hi']:+.3f}]")
+    print(f"  Net-points gap                     : {full_net['estimate']:+.3f} "
+          f"[{full_net['ci_lo']:+.3f}, {full_net['ci_hi']:+.3f}]")
+    pl.DataFrame([{"quantity": "points_diff_2for1_minus_hold", **full_pts}]
                  ).write_csv(OUT / "bootstrap_points_diff.csv")
+    pl.DataFrame([{"quantity": "net_diff_2for1_minus_hold", **full_net}]
+                 ).write_csv(OUT / "bootstrap_net_diff.csv")
 
     # ---- 2b. Sensitivity: narrow the selection gap -----------------------------
     # The headline comparison is confounded by *when a team got the ball*. A team
@@ -221,25 +251,20 @@ def main() -> int:
     # compares teams that all had the ball at broadly similar times, which shrinks
     # (does not remove) the selection gap.
     narrow = team_periods.filter(pl.col("first_fga_sec").is_between(20, 45))
-    na = narrow.filter(pl.col("two_for_one"))["points"].to_numpy()
-    nb = narrow.filter(~pl.col("two_for_one"))["points"].to_numpy()
-    if len(na) > 30 and len(nb) > 30:
-        rng2 = np.random.default_rng(7)
-        nboot = np.array([
-            rng2.choice(na, len(na), replace=True).mean()
-            - rng2.choice(nb, len(nb), replace=True).mean()
-            for _ in range(4000)
-        ])
-        nlo, nhi = np.quantile(nboot, [0.025, 0.975])
-        ndiff = na.mean() - nb.mean()
+    if narrow.filter(pl.col("two_for_one")).height > 30 and \
+       narrow.filter(~pl.col("two_for_one")).height > 30:
+        r_pts = boot_diff(narrow, "points", seed=7)
+        r_net = boot_diff(narrow, "net", seed=8)
         print(f"\n--- Sensitivity: first shot restricted to 20-45s "
-              f"(n={len(na):,} vs {len(nb):,}) ---")
-        print(f"  Difference: {ndiff:+.3f} points, 95% CI [{nlo:+.3f}, {nhi:+.3f}]")
-        pl.DataFrame([{"quantity": "points_diff_restricted_20_45s",
-                       "estimate": float(ndiff), "ci_lo": float(nlo),
-                       "ci_hi": float(nhi), "reps": len(nboot),
-                       "n_treated": len(na), "n_control": len(nb)}]
+              f"(n={r_pts['n_treated']:,} vs {r_pts['n_control']:,}) ---")
+        print(f"  Own-points gap: {r_pts['estimate']:+.3f} "
+              f"[{r_pts['ci_lo']:+.3f}, {r_pts['ci_hi']:+.3f}]")
+        print(f"  Net-points gap: {r_net['estimate']:+.3f} "
+              f"[{r_net['ci_lo']:+.3f}, {r_net['ci_hi']:+.3f}]")
+        pl.DataFrame([{"quantity": "points_diff_restricted_20_45s", **r_pts}]
                      ).write_csv(OUT / "bootstrap_restricted.csv")
+        pl.DataFrame([{"quantity": "net_diff_restricted_20_45s", **r_net}]
+                     ).write_csv(OUT / "bootstrap_net_restricted.csv")
 
     # ---- 3. Mechanism: how good is the shot at each point on the clock? --------
     all_shots = df.filter(

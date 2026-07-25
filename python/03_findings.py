@@ -20,6 +20,7 @@ MARKER = "## Findings"
 def build() -> str:
     summary = pl.read_csv(OUT / "two_for_one_summary.csv")
     boot = pl.read_csv(OUT / "bootstrap_points_diff.csv").row(0, named=True)
+    boot_net = pl.read_csv(OUT / "bootstrap_net_diff.csv").row(0, named=True)
     efg = pl.read_csv(OUT / "efg_by_seconds_left.csv").sort("bucket")
     windows = pl.read_csv(OUT / "team_period_windows.csv")
 
@@ -59,17 +60,24 @@ def build() -> str:
     rpath = OUT / "bootstrap_restricted.csv"
     if rpath.exists():
         r = pl.read_csv(rpath).row(0, named=True)
+        rn = pl.read_csv(OUT / "bootstrap_net_restricted.csv").row(0, named=True)
         r_excl = "excludes" if (r["ci_lo"] > 0 or r["ci_hi"] < 0) else "includes"
+        rn_excl = "excludes" if (rn["ci_lo"] > 0 or rn["ci_hi"] < 0) else "includes"
         restricted = (
             f"\n### Sensitivity: narrowing the selection gap\n\n"
             f"Restricting to team-periods whose first shot came between 20 and 45 "
             f"seconds — so both groups had the ball at broadly similar times — the "
-            f"gap is **{r['estimate']:+.3f} points** "
-            f"(95% CI [{r['ci_lo']:+.3f}, {r['ci_hi']:+.3f}], {r_excl} zero; "
+            f"own-points gap is **{r['estimate']:+.3f}** "
+            f"(95% CI [{r['ci_lo']:+.3f}, {r['ci_hi']:+.3f}], {r_excl} zero) and the "
+            f"net gap is **{rn['estimate']:+.3f}** "
+            f"(95% CI [{rn['ci_lo']:+.3f}, {rn['ci_hi']:+.3f}], {rn_excl} zero; "
             f"n = {r['n_treated']:,} vs {r['n_control']:,}).\n\n"
-            f"The effect shrinks under the restriction, which is what you would "
+            f"Both gaps shrink under the restriction, which is what you would "
             f"expect if part of the headline gap is selection rather than strategy. "
-            f"It does not vanish.\n"
+            f"The own-points advantage survives; the net advantage narrows to the "
+            f"edge of what one season of data can distinguish from zero. That "
+            f"asymmetry is itself informative: the extra possession is real, but "
+            f"the opponent's reply claws back much of its value.\n"
         )
 
     return f"""{MARKER}
@@ -99,18 +107,28 @@ special happened at 32. That discontinuity is the behaviour itself, visible in t
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 
-### 2. The 2-for-1 is associated with more points
+### 2. The 2-for-1 is associated with more points — on both sides of the ball
 
 | | First shot ≥ 32s (2-for-1) | First shot < 32s (held) |
 |---|---|---|
 | Team-periods | {t['team_periods_n']:,} | {h['team_periods_n']:,} |
 | Mean points in window | **{t['mean_points']:.3f}** | **{h['mean_points']:.3f}** |
+| Mean opponent points | **{t['mean_opp_points']:.3f}** | **{h['mean_opp_points']:.3f}** |
+| Mean **net** points | **{t['mean_net']:+.3f}** | **{h['mean_net']:+.3f}** |
 | Mean field-goal attempts | **{t['mean_fga']:.2f}** | **{h['mean_fga']:.2f}** |
 | Effective FG% | **{t['mean_efg']:.3f}** | **{h['mean_efg']:.3f}** |
 
-Difference: **{boot['estimate']:+.3f} points** per team-period
+Own-points difference: **{boot['estimate']:+.3f}** per team-period
 (95% bootstrap CI [{boot['ci_lo']:+.3f}, {boot['ci_hi']:+.3f}], {excl} zero,
 {int(boot['reps']):,} resamples).
+
+**Why net matters:** the case for holding the ball is precisely that it denies
+the opponent a reply, so an outcome that only counts a team's own points misses
+half the trade. On net points the raw gap is **{boot_net['estimate']:+.3f}**
+(95% CI [{boot_net['ci_lo']:+.3f}, {boot_net['ci_hi']:+.3f}]) — but read the
+sensitivity analysis below before taking either raw gap at face value, because
+the "held" group includes many team-periods where the *opponent* controlled the
+window.
 
 The mechanism is visible in the FGA row: roughly
 **{t['mean_fga'] - h['mean_fga']:+.2f} extra shots** per window. That is the extra
@@ -144,9 +162,12 @@ gotten a stop, and may be in transition against an unset defense.
 
 The sensitivity analysis narrows that gap but does not close it. The honest
 statement is: **teams that shoot early score more in the window, the extra
-possession is real and measurable, and the usual objection to the strategy is not
-visible in the data.** A causal estimate would need possession-level tracking of
-when each team actually gained the ball, which is the natural next step.
+possession is real and measurable, and the usual objection to the strategy — a
+rushed, bad shot — is not visible in the data. What limits the payoff is not
+shot quality but the opponent's reply: on a net basis, in the comparable
+sample, one season of data cannot cleanly distinguish the advantage from
+zero.** A causal estimate would need possession-level tracking of when each
+team actually gained the ball, which is the natural next step.
 """
 
 
