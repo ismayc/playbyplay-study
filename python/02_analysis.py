@@ -294,7 +294,7 @@ def main() -> int:
         f"When a team takes its first shot in the last 60s of Q1-Q3 "
         f"({n_games:,} games, 2023-24)",
         "Seconds left when the first shot went up", "Team-periods"))
-    fig.add_trace(go.Bar(x=hist["bucket"].to_list(), y=hist["n"].to_list(),
+    fig.add_trace(go.Bar(marker_line=dict(color='white', width=1), x=hist["bucket"].to_list(), y=hist["n"].to_list(),
                          marker=dict(color=BLUE, line=dict(width=0)),
                          hovertemplate="%{x}s left: %{y:,} team-periods<extra></extra>"))
     fig.add_vline(x=TWO_FOR_ONE_SEC, line=dict(color=ORANGE, width=1.5, dash="dot"))
