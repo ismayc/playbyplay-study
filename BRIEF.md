@@ -16,7 +16,7 @@ smaller than the box score makes it look.
   minute — about **+0.6 points** — and the extra shot shows up right where it
   should (+0.9 attempts).
 - **The feared cost isn't there.** The early shot is a normal-quality shot
-  (~52% eFG). The genuinely bad shot is the buzzer-beater everyone takes
+  (~55% eFG). The genuinely bad shot is the buzzer-beater everyone takes
   anyway (35%). You don't trade a good shot for a bad one; you add a normal
   possession.
 - **The honest catch:** shooting early gives the opponent the ball back with
