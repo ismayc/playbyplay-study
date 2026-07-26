@@ -39,9 +39,10 @@ survive its own accounting.
 {{fig:fig2_efg_by_clock|Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the 2-for-1 is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)}}
 
 One methodological note belongs in the story rather than a footnote,
-because it explains why these numbers can be trusted: the first version of
-this analysis silently sorted play-by-play event numbers as text ("100"
-before "2"), which corrupted every scoreboard-dependent number downstream.
+because it explains why these numbers can be trusted. The first version
+of this analysis silently sorted play-by-play event numbers as text,
+putting "100" before "2". That corrupted every scoreboard-dependent
+number downstream.
 The bug was caught by this family's standing rule that every analysis is
 implemented twice, in R and Python, and reconciled to numeric tolerance
 before findings are written. The gap between the naive and corrected

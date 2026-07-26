@@ -4,7 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The 2-for-1 is real, coaches actually do it, and the payoff is smaller than it looks</title>
-
+<meta name="description" content="Reconciled, validated basketball analytics on public data: part of the basketball-data-science family.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏀</text></svg>">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Basketball Data Science">
+<meta property="og:title" content="The 2-for-1 is real, coaches actually do it, and the payoff is smaller than it looks">
+<meta property="og:description" content="Reconciled, validated basketball analytics on public data: part of the basketball-data-science family.">
+<meta property="og:url" content="https://ismayc.github.io/playbyplay-study/">
+<meta property="og:image" content="https://ismayc.github.io/basketball-data-science/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ismayc.github.io/basketball-data-science/og-image.png">
 <style>
 :root {
   --ink: #1a1d24; --ink-2: #4a4f5c; --ink-3: #767b88;
@@ -132,9 +143,10 @@ negligible. But the breathless version of the <abbr title="Shooting early with 2
 survive its own accounting.</p>
 <figure class="figure-card"><iframe src="figures/fig2_efg_by_clock.html" loading="lazy" title="Efg by clock"></iframe><figcaption>Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)</figcaption></figure>
 <p>One methodological note belongs in the story rather than a footnote,
-because it explains why these numbers can be trusted: the first version of
-this analysis silently sorted play-by-play event numbers as text ("100"
-before "2"), which corrupted every scoreboard-dependent number downstream.
+because it explains why these numbers can be trusted. The first version
+of this analysis silently sorted play-by-play event numbers as text,
+putting "100" before "2". That corrupted every scoreboard-dependent
+number downstream.
 The bug was caught by this family's standing rule that every analysis is
 implemented twice, in R and Python, and reconciled to numeric tolerance
 before findings are written. The gap between the naive and corrected
