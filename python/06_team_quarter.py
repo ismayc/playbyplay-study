@@ -89,7 +89,8 @@ def figures(team: pl.DataFrame, quarter: pl.DataFrame) -> None:
     fig = go.Figure(go.Bar(
         x=team["rate"], y=team["teamTricode"], orientation="h",
         marker=dict(color="#1E3A5F", line=dict(color="white", width=1)),
-        customdata=team.select("windows", "own_pts", "net_pts").to_numpy(),
+        customdata=[[int(w), round(o, 2), round(n, 2)] for w, o, n in
+                    team.select("windows", "own_pts", "net_pts").rows()],
         hovertemplate=("%{y}: %{x:.0%} of %{customdata[0]} windows"
                        "<br>own pts/window %{customdata[1]:.2f} · net "
                        "%{customdata[2]:+.2f}<extra></extra>")))
@@ -112,14 +113,15 @@ def figures(team: pl.DataFrame, quarter: pl.DataFrame) -> None:
     fig.add_trace(go.Bar(
         name="2-for-1 taken", x=labels, y=quarter["own_tfo"],
         marker=dict(color="#1E3A5F", line=dict(color="white", width=1)),
-        customdata=quarter.select("rate", "net_tfo").to_numpy(),
+        customdata=[[round(r, 3), round(n, 2)] for r, n in
+                    quarter.select("rate", "net_tfo").rows()],
         hovertemplate=("%{x} 2-for-1: %{y:.2f} own pts/window"
                        "<br>net %{customdata[1]:+.2f} · taken in "
                        "%{customdata[0]:.0%} of windows<extra></extra>")))
     fig.add_trace(go.Bar(
         name="held", x=labels, y=quarter["own_hold"],
         marker=dict(color="#9AAFC9", line=dict(color="white", width=1)),
-        customdata=quarter.select("net_hold").to_numpy(),
+        customdata=[[round(n, 2)] for n in quarter["net_hold"]],
         hovertemplate=("%{x} held: %{y:.2f} own pts/window"
                        "<br>net %{customdata[0]:+.2f}<extra></extra>")))
     fig.update_layout(
