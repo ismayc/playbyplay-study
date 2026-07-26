@@ -140,7 +140,7 @@ threshold**:
 
 Teams bunch at 31–33 seconds **1.37× more** than at 36–40 seconds,
 even though the later band has more chances to shoot and should be higher if nothing
-special happened at 32. That discontinuity is the behaviour itself, visible in the
+special happened at 32. That discontinuity is the behavior itself, visible in the
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 
@@ -156,13 +156,13 @@ See `figures/fig1_first_shot_timing.png`.
 | Effective FG% | **0.506** | **0.436** |
 
 Own-points difference: **+0.579** per team-period
-(95% bootstrap <abbr title="Confidence interval.">CI</abbr> [+0.475, +0.679], excludes zero,
+(95% bootstrap <abbr title="Confidence interval.">CI</abbr> [+0.476, +0.680], excludes zero,
 4,000 resamples).
 
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **+0.679**
-(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.816]). But read the
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.812]). But read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
@@ -173,7 +173,7 @@ possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.375], includes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.218, +0.511], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.005, +0.379], includes zero; n = 2,199 vs 842).
 
 Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.
 
@@ -230,7 +230,7 @@ Three things fall out:
 1. **The debate is over in practice.** Teams with the ball at the decision
    moment go quick 84% of the time; genuine holds are nearly
    extinct: 24 team-periods in a full season. The argument this study
-   set out to test has largely been settled by the league's behaviour.
+   set out to test has largely been settled by the league's behavior.
 2. **The mechanism is now measured directly**: quick teams average
    1.09 further possessions after the mark vs
    0.21 for holds (the extra possession counted,
@@ -239,7 +239,7 @@ Three things fall out:
    **+0.69 [+0.23, +1.20]**,
    consistent with the tactic paying, but with 24 holds the
    comparison is honest about being underpowered. When a strategy wins the
-   behavioural argument this thoroughly, its control group disappears.
+   behavioral argument this thoroughly, its control group disappears.
 
 The first-shot proxy, scored against observed choices: it flags
 82% of true quicks but correctly identifies

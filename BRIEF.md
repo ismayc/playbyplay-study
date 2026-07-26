@@ -54,7 +54,7 @@ headline gap from +0.36 to +0.58.
 - The 2-for-1 adds a real extra possession at no shot-quality cost; the
   opponent's reply claws back much of the value: net edge ~+0.2 points,
   not statistically distinguishable from zero in one season.
-- Coaches already run this play on schedule; the data shows the behaviour,
+- Coaches already run this play on schedule; the data shows the behavior,
   the payoff, and the honest uncertainty.
 - The finding survived a two-language verification gate that caught a
   data-ordering bug which had silently corrupted every score in v1.

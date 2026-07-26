@@ -30,7 +30,7 @@ def build() -> str:
     n_games = windows["gameId"].n_unique()
     share = t["team_periods_n"] / (t["team_periods_n"] + h["team_periods_n"])
 
-    # Behavioural evidence: a local spike in first-shot timing right at the
+    # Behavioral evidence: a local spike in first-shot timing right at the
     # threshold. Compared against the 36-40s band, which has MORE opportunity
     # (later in the window) and so should be higher if nothing special happened
     # at 32s.
@@ -112,7 +112,7 @@ Three things fall out:
 1. **The debate is over in practice.** Teams with the ball at the decision
    moment go quick {q['n'] / total:.0%} of the time; genuine holds are nearly
    extinct: {hd['n']} team-periods in a full season. The argument this study
-   set out to test has largely been settled by the league's behaviour.
+   set out to test has largely been settled by the league's behavior.
 2. **The mechanism is now measured directly**: quick teams average
    {q['mean_later_poss']:.2f} further possessions after the mark vs
    {hd['mean_later_poss']:.2f} for holds (the extra possession counted,
@@ -121,7 +121,7 @@ Three things fall out:
    **{db['estimate']:+.2f} [{db['ci_lo']:+.2f}, {db['ci_hi']:+.2f}]**,
    consistent with the tactic paying, but with {db['n_control']} holds the
    comparison is honest about being underpowered. When a strategy wins the
-   behavioural argument this thoroughly, its control group disappears.
+   behavioral argument this thoroughly, its control group disappears.
 
 The first-shot proxy, scored against observed choices: it flags
 {pv['quick_correctly_flagged']:.0%} of true quicks but correctly identifies
@@ -152,7 +152,7 @@ threshold**:
 
 Teams bunch at 31–33 seconds **{spike / after:.2f}× more** than at 36–40 seconds,
 even though the later band has more chances to shoot and should be higher if nothing
-special happened at 32. That discontinuity is the behaviour itself, visible in the
+special happened at 32. That discontinuity is the behavior itself, visible in the
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 

@@ -146,7 +146,7 @@ def window_points(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def window_shots(df: pl.DataFrame) -> pl.DataFrame:
-    """Shot behaviour by each side inside the window."""
+    """Shot behavior by each side inside the window."""
     shots = df.filter(
         pl.col("period").is_in([1, 2, 3])
         & (pl.col("secs_left") <= WINDOW_SEC)
