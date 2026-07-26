@@ -66,7 +66,7 @@ def build() -> str:
         restricted = (
             f"\n### Sensitivity: narrowing the selection gap\n\n"
             f"Restricting to team-periods whose first shot came between 20 and 45 "
-            f"seconds — so both groups had the ball at broadly similar times — the "
+            f"seconds (so both groups had the ball at broadly similar times), the "
             f"own-points gap is **{r['estimate']:+.3f}** "
             f"(95% CI [{r['ci_lo']:+.3f}, {r['ci_hi']:+.3f}], {r_excl} zero) and the "
             f"net gap is **{rn['estimate']:+.3f}** "
@@ -95,10 +95,10 @@ def build() -> str:
 
 The proxy limitation is closed with real possessions (pbpstats rows with
 start/end times via the bulk archive in `../docs/public-data-availability.md`;
-1,228 of 1,230 games — `python/05_possession_analysis.py` also documents why a
+1,228 of 1,230 games; `python/05_possession_analysis.py` also documents why a
 literal translation of the old design just relocates the blindness). The
 sharper frame: **at the 40-second mark of every Q1–Q3, exactly one team has
-the ball — the team actually facing the 2-for-1 decision.** {total:,} decision
+the ball, the team actually facing the 2-for-1 decision.** {total:,} decision
 possessions, split by the observed choice:
 
 | Choice | n | Share | Net pts from 40s | Later possessions | ended in TO |
@@ -111,21 +111,21 @@ Three things fall out:
 
 1. **The debate is over in practice.** Teams with the ball at the decision
    moment go quick {q['n'] / total:.0%} of the time; genuine holds are nearly
-   extinct — {hd['n']} team-periods in a full season. The argument this study
+   extinct: {hd['n']} team-periods in a full season. The argument this study
    set out to test has largely been settled by the league's behaviour.
 2. **The mechanism is now measured directly**: quick teams average
    {q['mean_later_poss']:.2f} further possessions after the mark vs
-   {hd['mean_later_poss']:.2f} for holds — the extra possession counted,
-   not inferred from shots.
+   {hd['mean_later_poss']:.2f} for holds (the extra possession counted,
+   not inferred from shots).
 3. Quick minus hold on net points from the mark:
-   **{db['estimate']:+.2f} [{db['ci_lo']:+.2f}, {db['ci_hi']:+.2f}]** —
+   **{db['estimate']:+.2f} [{db['ci_lo']:+.2f}, {db['ci_hi']:+.2f}]**,
    consistent with the tactic paying, but with {db['n_control']} holds the
    comparison is honest about being underpowered. When a strategy wins the
    behavioural argument this thoroughly, its control group disappears.
 
 The first-shot proxy, scored against observed choices: it flags
 {pv['quick_correctly_flagged']:.0%} of true quicks but correctly identifies
-only {pv['hold_correctly_unflagged']:.0%} of true holds — quantifying exactly
+only {pv['hold_correctly_unflagged']:.0%} of true holds, quantifying exactly
 how much limitation 2 mattered.
 """
 
@@ -140,7 +140,7 @@ Of the {t['team_periods_n'] + h['team_periods_n']:,} team-periods with a shot in
 final 60 seconds of Q1–Q3, **{share:.0%}** took their first shot with 32 or more
 seconds left.
 
-The share alone is weak evidence — later in the window there is simply more
+The share alone is weak evidence. Later in the window there is simply more
 opportunity to shoot. The strong evidence is a **local spike exactly at the
 threshold**:
 
@@ -156,7 +156,7 @@ special happened at 32. That discontinuity is the behaviour itself, visible in t
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 
-### 2. The 2-for-1 is associated with more points — on both sides of the ball
+### 2. The 2-for-1 is associated with more points, on both sides of the ball
 
 | | First shot ≥ 32s (2-for-1) | First shot < 32s (held) |
 |---|---|---|
@@ -174,7 +174,7 @@ Own-points difference: **{boot['estimate']:+.3f}** per team-period
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **{boot_net['estimate']:+.3f}**
-(95% CI [{boot_net['ci_lo']:+.3f}, {boot_net['ci_hi']:+.3f}]) — but read the
+(95% CI [{boot_net['ci_lo']:+.3f}, {boot_net['ci_hi']:+.3f}]). But read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
@@ -192,7 +192,7 @@ extra possession. **In this data that cost does not show up.**
 |---|---|---|
 {efg_rows}
 
-Shots taken with 32+ seconds left average **eFG% {early_efg:.3f}** — ordinary,
+Shots taken with 32+ seconds left average **eFG% {early_efg:.3f}**: ordinary,
 in-rhythm shots. The genuinely bad shot is the buzzer-beater: **eFG% {late_efg:.3f}**
 in the last four seconds.
 
@@ -206,13 +206,13 @@ takes the bad shot.
 The treatment is not randomly assigned, and the biggest confound is possession
 timing: a team that does not get the ball until 20 seconds remain *cannot* run a
 2-for-1, and is not comparable to one that had it at 40 seconds. Some of the gap is
-therefore selection — teams with the ball earlier were more likely to have just
+therefore selection: teams with the ball earlier were more likely to have just
 gotten a stop, and may be in transition against an unset defense.
 
 The sensitivity analysis narrows that gap but does not close it. The honest
 statement is: **teams that shoot early score more in the window, the extra
-possession is real and measurable, and the usual objection to the strategy — a
-rushed, bad shot — is not visible in the data. What limits the payoff is not
+possession is real and measurable, and the usual objection to the strategy (a
+rushed, bad shot) is not visible in the data. What limits the payoff is not
 shot quality but the opponent's reply: on a net basis, in the comparable
 sample, one season of data cannot cleanly distinguish the advantage from
 zero.** A causal estimate would need possession-level tracking of when each

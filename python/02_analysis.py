@@ -300,7 +300,7 @@ def main() -> int:
     fig.add_vline(x=TWO_FOR_ONE_SEC, line=dict(color=ORANGE, width=1.5, dash="dot"))
     fig.add_annotation(x=TWO_FOR_ONE_SEC, y=1, yref="paper", yanchor="bottom",
                        xanchor="left", xshift=6,
-                       text="32s — conventional 2-for-1 threshold",
+                       text="32s: conventional 2-for-1 threshold",
                        showarrow=False, font=dict(color=ORANGE, size=12))
     save(fig, "fig1_first_shot_timing")
 

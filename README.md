@@ -1,11 +1,11 @@
-# Play-by-play study — does the end-of-quarter 2-for-1 pay?
+# Play-by-play study: does the end-of-quarter 2-for-1 pay?
 
 A full-season play-by-play study in the [basketball-data-science](https://github.com/ismayc/basketball-data-science)
 family: event data turned into a basketball decision.
 
 **The question.** With 30–40 seconds left in a quarter, a team with the ball can
-shoot quickly — hoping to get one more possession before the buzzer, two shots for
-the opponent's one — or hold for the last shot and deny the opponent any reply.
+shoot quickly (hoping to get one more possession before the buzzer, two shots for
+the opponent's one) or hold for the last shot and deny the opponent any reply.
 Coaches genuinely disagree. This measures both sides of the trade on a full season.
 
 ---
@@ -13,10 +13,10 @@ Coaches genuinely disagree. This measures both sides of the trade on a full seas
 <!-- terms -->
 > **Terms used in this analysis.** Dotted-underlined terms anywhere below repeat these definitions on hover ([full glossary](https://github.com/ismayc/basketball-data-science/blob/main/docs/glossary.md)).
 >
-> - **FGA** — Field-goal attempts.
-> - **eFG%** — Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.
-> - **2-for-1** — Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.
-> - **CI** — Confidence interval.
+> - **FGA**: Field-goal attempts.
+> - **eFG%**: Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.
+> - **2-for-1**: Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.
+> - **CI**: Confidence interval.
 <!-- /terms -->
 
 ## 1. What play-by-play data is publicly available?
@@ -33,10 +33,10 @@ All are reached through the [`nba_api`](https://github.com/swar/nba_api) Python
 package, which is an unofficial but well-maintained wrapper over the same public
 `stats.nba.com` endpoints the league's own site calls.
 
-**Coverage:** the full 2023-24 regular season — **1,230 games**, ~500 events each.
+**Coverage:** the full 2023-24 regular season, **1,230 games**, ~500 events each.
 
 Worth noting for the tracking question: `PlayByPlayV3` carries `xLegacy`/`yLegacy`
-court coordinates on shot events. That is genuine spatial data, live and current —
+court coordinates on shot events. That is genuine spatial data, live and current,
 unlike raw tracking, which is only available as a frozen 2015-16 archive (see
 [tracking-study](https://github.com/ismayc/tracking-study)).
 
@@ -63,7 +63,7 @@ python python/03_findings.py
 ```
 
 The reconciliation is not ceremonial. The Python implementation originally
-sorted events by `actionNumber` **as text** — `"100"` before `"2"` — which
+sorted events by `actionNumber` **as text** (`"100"` before `"2"`), which
 scrambled the score forward-fill and corrupted every window score. The bug was
 caught in review by re-deriving the table with a numeric sort; the independent
 R implementation now guards that class of error permanently, the same
@@ -82,7 +82,7 @@ re-hits the network.
 | Window | **final 60 seconds** | Wide enough to contain the whole decision, narrow enough that the rest of the quarter does not dilute it |
 | Treatment | **first <abbr title="Field-goal attempts.">FGA</abbr> at ≥ 32s** | Conventional threshold: enough for a 24-second opponent possession plus a final possession of your own |
 | Outcome | **score delta**, not summed shot values | Free throws in this feed carry an *empty* `shotResult`, so summing shot values would silently drop every and-1 and shooting foul. Score deltas capture all scoring |
-| Second outcome | **net points** (own minus opponent, same window) | Holding for the last shot is valuable *because it denies the opponent a reply* — an own-points outcome misses the entire cost side of the trade. Both outcomes are reported |
+| Second outcome | **net points** (own minus opponent, same window) | Holding for the last shot is valuable *because it denies the opponent a reply*: an own-points outcome misses the entire cost side of the trade. Both outcomes are reported |
 | Score handling | forward-fill across the game | Scores are only stamped on scoring events; the fill runs across the whole game, not within period, because periods start from the running total |
 | Uncertainty | **bootstrap**, not a t-test | Points in a 60-second window are a small, lumpy, non-normal count (0, 2, 3, 5…) |
 | Unit of analysis | team-period | One row per team per period, not per game |
@@ -90,7 +90,7 @@ re-hits the network.
 ### The confound this design cannot remove
 
 **A team can only run a <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> if it happens to have the ball early in the window.**
-Which teams have the ball at 40 seconds is not random — they likely just got a stop,
+Which teams have the ball at 40 seconds is not random. They likely just got a stop,
 and may be attacking an unset defense.
 
 This is stated up front rather than buried, a restricted-sample sensitivity analysis
@@ -102,7 +102,7 @@ is reported alongside the headline, and the write-up does not claim a causal eff
 
 1. **Observational, not causal.** See above. The treatment is chosen by teams, not
    assigned.
-2. **Possession is inferred from shots, not tracked** — in the original design.
+2. **Possession is inferred from shots, not tracked**, in the original design.
    Now addressed: Finding 4 redoes the analysis on real possession rows and
    quantifies exactly how often this proxy misread the choice (it flags 82% of
    true quick attempts, but only half of true holds).
@@ -128,7 +128,7 @@ Of the 7,221 team-periods with a shot in the
 final 60 seconds of Q1–Q3, **78%** took their first shot with 32 or more
 seconds left.
 
-The share alone is weak evidence — later in the window there is simply more
+The share alone is weak evidence. Later in the window there is simply more
 opportunity to shoot. The strong evidence is a **local spike exactly at the
 threshold**:
 
@@ -144,7 +144,7 @@ special happened at 32. That discontinuity is the behaviour itself, visible in t
 raw counts rather than assumed: coaches are running this play deliberately.
 See `figures/fig1_first_shot_timing.png`.
 
-### 2. The 2-for-1 is associated with more points — on both sides of the ball
+### 2. The 2-for-1 is associated with more points, on both sides of the ball
 
 | | First shot ≥ 32s (<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>) | First shot < 32s (held) |
 |---|---|---|
@@ -162,7 +162,7 @@ Own-points difference: **+0.579** per team-period
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **+0.679**
-(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.816]) — but read the
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.816]). But read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
@@ -173,7 +173,7 @@ possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.375], includes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.375], includes zero; n = 2,199 vs 842).
 
 Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.
 
@@ -200,7 +200,7 @@ extra possession. **In this data that cost does not show up.**
 | 52–55s | 0.559 | 904 |
 | 56–59s | 0.562 | 931 |
 
-Shots taken with 32+ seconds left average **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.551** — ordinary,
+Shots taken with 32+ seconds left average **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.551**: ordinary,
 in-rhythm shots. The genuinely bad shot is the buzzer-beater: **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.347**
 in the last four seconds.
 
@@ -212,11 +212,11 @@ takes the bad shot.
 ### 4. Possession-level upgrade: the decision-team design
 
 The proxy limitation is closed with real possessions (pbpstats rows with
-start/end times via the bulk archive in [public-data-availability](https://github.com/ismayc/basketball-data-science/blob/main/docs/public-data-availability.md);
-1,228 of 1,230 games — `python/05_possession_analysis.py` also documents why a
+start/end times via the bulk archive in `../docs/public-data-availability.md`;
+1,228 of 1,230 games; `python/05_possession_analysis.py` also documents why a
 literal translation of the old design just relocates the blindness). The
 sharper frame: **at the 40-second mark of every Q1–Q3, exactly one team has
-the ball — the team actually facing the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> decision.** 3,683 decision
+the ball, the team actually facing the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> decision.** 3,683 decision
 possessions, split by the observed choice:
 
 | Choice | n | Share | Net pts from 40s | Later possessions | ended in TO |
@@ -229,21 +229,21 @@ Three things fall out:
 
 1. **The debate is over in practice.** Teams with the ball at the decision
    moment go quick 84% of the time; genuine holds are nearly
-   extinct — 24 team-periods in a full season. The argument this study
+   extinct: 24 team-periods in a full season. The argument this study
    set out to test has largely been settled by the league's behaviour.
 2. **The mechanism is now measured directly**: quick teams average
    1.09 further possessions after the mark vs
-   0.21 for holds — the extra possession counted,
-   not inferred from shots.
+   0.21 for holds (the extra possession counted,
+   not inferred from shots).
 3. Quick minus hold on net points from the mark:
-   **+0.69 [+0.23, +1.20]** —
+   **+0.69 [+0.23, +1.20]**,
    consistent with the tactic paying, but with 24 holds the
    comparison is honest about being underpowered. When a strategy wins the
    behavioural argument this thoroughly, its control group disappears.
 
 The first-shot proxy, scored against observed choices: it flags
 82% of true quicks but correctly identifies
-only 50% of true holds — quantifying exactly
+only 50% of true holds, quantifying exactly
 how much limitation 2 mattered.
 
 ### 5. What this does not establish
@@ -251,13 +251,13 @@ how much limitation 2 mattered.
 The treatment is not randomly assigned, and the biggest confound is possession
 timing: a team that does not get the ball until 20 seconds remain *cannot* run a
 <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>, and is not comparable to one that had it at 40 seconds. Some of the gap is
-therefore selection — teams with the ball earlier were more likely to have just
+therefore selection: teams with the ball earlier were more likely to have just
 gotten a stop, and may be in transition against an unset defense.
 
 The sensitivity analysis narrows that gap but does not close it. The honest
 statement is: **teams that shoot early score more in the window, the extra
-possession is real and measurable, and the usual objection to the strategy — a
-rushed, bad shot — is not visible in the data. What limits the payoff is not
+possession is real and measurable, and the usual objection to the strategy (a
+rushed, bad shot) is not visible in the data. What limits the payoff is not
 shot quality but the opponent's reply: on a net basis, in the comparable
 sample, one season of data cannot cleanly distinguish the advantage from
 zero.** A causal estimate would need possession-level tracking of when each
