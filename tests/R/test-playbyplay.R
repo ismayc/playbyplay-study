@@ -1,6 +1,6 @@
 # Unit tests for playbyplay-study/R/functions.R
 
-source(file.path(REPO, "playbyplay-study", "R", "functions.R"))
+source(file.path(REPO, "R", "functions.R"))
 
 test_that("parse_clock_secs converts the PT..M..S format", {
   expect_equal(parse_clock_secs("PT11M42.50S"), 11 * 60 + 42.5)
