@@ -38,6 +38,25 @@ survive its own accounting.
 
 {{fig:fig2_efg_by_clock|Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the 2-for-1 is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)}}
 
+Two natural follow-ups deserve their own figures. First, who actually
+hunts the 2-for-1? The behavioral dial is team-controlled, and the league
+spread is real but modest: Sacramento leads at 85% of its final-minute
+windows, Chicago trails at 73%, and every team sits above 70%. This is a
+league-wide habit with team accents, not a strategy some teams run and
+others refuse.
+
+{{fig:fig3_team_2for1|Every team's 2-for-1 rate, sorted, with the league line marked. The scouting read: the spread from Sacramento (85%) to Chicago (73%) is about 12 points, so opponent tendency is worth knowing but nobody truly abstains. Hover a team for its window count and points outcomes.}}
+
+Second, does the quarter matter? Almost not at all. The 2-for-1 rate is
+78.4% in the first quarter, 78.0% in the second, and 76.8% in the third.
+The payoff ordering also holds in every quarter: taking the 2-for-1 wins
+each one on own points and on net. That flatness is itself informative.
+The decision is driven by the clock, not the scoreboard or the stage of
+the game, at least through three quarters (the fourth is excluded by
+design, because endgame strategy changes everything).
+
+{{fig:fig4_quarter_2for1|Own points per window by quarter, 2-for-1 versus hold. Necessary because "does context change the answer?" is the first question a coach asks: the bars barely move across quarters, so the recommendation survives without a quarter-by-quarter carve-out.}}
+
 One methodological note belongs in the story rather than a footnote,
 because it explains why these numbers can be trusted. The first version
 of this analysis silently sorted play-by-play event numbers as text,
