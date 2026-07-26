@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play-by-play study — does the end-of-quarter 2-for-1 pay?</title>
+
+<style>
+:root {
+  --ink: #1a1d24; --ink-2: #4a4f5c; --ink-3: #767b88;
+  --surface: #ffffff; --surface-2: #f5f6f8; --rule: #e3e5ea;
+  --accent: #1452cc; --accent-ink: #1452cc;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e8eaf0; --ink-2: #b5bac6; --ink-3: #878d9c;
+    --surface: #14161c; --surface-2: #1d2029; --rule: #2c303c;
+    --accent: #6f9bff; --accent-ink: #8db0ff;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--ink);
+  font: 17px/1.65 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+.masthead { border-bottom: 1px solid var(--rule); }
+.masthead .inner { max-width: 76ch; margin: 0 auto; padding: .8rem 1.25rem;
+  display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.masthead a { color: var(--ink-2); text-decoration: none; font-size: .88rem; }
+.masthead a:hover { color: var(--accent-ink); }
+.masthead .family { font-weight: 700; letter-spacing: .02em; color: var(--ink); }
+.masthead .spacer { flex: 1; }
+main { max-width: 76ch; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -.01em;
+  margin: 1.2rem 0 .6rem; }
+h2 { font-size: 1.35rem; margin: 2.2rem 0 .6rem; padding-top: 1rem;
+  border-top: 1px solid var(--rule); }
+h3 { font-size: 1.08rem; margin: 1.6rem 0 .4rem; }
+a { color: var(--accent-ink); text-decoration-thickness: 1px;
+  text-underline-offset: 2px; }
+p, li { color: var(--ink); }
+code { background: var(--surface-2); border: 1px solid var(--rule);
+  border-radius: 4px; padding: .08em .35em; font-size: .86em; }
+pre { background: var(--surface-2); border: 1px solid var(--rule);
+  border-radius: 8px; padding: .8rem 1rem; overflow-x: auto; }
+pre code { background: none; border: none; padding: 0; }
+blockquote { margin: 1.2rem 0; padding: .8rem 1.1rem;
+  background: var(--surface-2); border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0; font-size: .92rem; }
+blockquote p { margin: .3rem 0; }
+.tablewrap { overflow-x: auto; margin: 1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem;
+  font-variant-numeric: tabular-nums; }
+th { text-align: left; color: var(--ink-2); font-weight: 600;
+  border-bottom: 2px solid var(--rule); padding: .4rem .6rem; }
+td { border-bottom: 1px solid var(--rule); padding: .4rem .6rem;
+  vertical-align: top; }
+abbr[title] { text-decoration: underline dotted var(--accent);
+  text-underline-offset: 2px; cursor: help; }
+hr { border: none; border-top: 1px solid var(--rule); margin: 2rem 0; }
+.figure-card { background: #fff; border: 1px solid var(--rule);
+  border-radius: 10px; margin: 1.4rem 0; overflow: hidden; }
+.figure-card iframe { display: block; width: 100%; height: 520px;
+  border: none; }
+.figure-card figcaption { padding: .55rem .9rem; font-size: .85rem;
+  color: var(--ink-3); border-top: 1px solid var(--rule);
+  background: var(--surface); }
+footer { border-top: 1px solid var(--rule); margin-top: 3rem;
+  padding: 1rem 1.25rem; font-size: .85rem; color: var(--ink-3);
+  text-align: center; }
+footer a { color: var(--ink-2); }
+/* hub cards */
+.cards { display: grid; grid-template-columns:
+  repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.card { border: 1px solid var(--rule); border-radius: 10px;
+  padding: 1rem 1.1rem; background: var(--surface-2);
+  display: flex; flex-direction: column; gap: .45rem; }
+.card .kicker { font-size: .78rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ink-3); }
+.card h3 { margin: 0; font-size: 1.05rem; }
+.card p { margin: 0; font-size: .92rem; color: var(--ink-2); flex: 1; }
+.card .links { font-size: .88rem; }
+.hero { padding: 2.2rem 0 .6rem; }
+.hero p.deck { font-size: 1.12rem; color: var(--ink-2); max-width: 64ch; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="inner">
+  <a class="family" href="https://ismayc.github.io/basketball-data-science/">Basketball Data Science</a>
+  <span class="spacer"></span>
+  <a href="https://ismayc.github.io/nba-scouting-onepagers/">Scouting one-pagers</a>
+  <a href="https://github.com/ismayc/basketball-data-science">GitHub</a>
+</div></header>
+<main>
+<h1>Play-by-play study — does the end-of-quarter 2-for-1 pay?</h1>
+<p>A full-season play-by-play study in the <a href="https://github.com/ismayc/basketball-data-science">basketball-data-science</a>
+family: event data turned into a basketball decision.</p>
+<p><strong>The question.</strong> With 30–40 seconds left in a quarter, a team with the ball can
+shoot quickly — hoping to get one more possession before the buzzer, two shots for
+the opponent's one — or hold for the last shot and deny the opponent any reply.
+Coaches genuinely disagree. This measures both sides of the trade on a full season.</p>
+<hr />
+<!-- terms -->
+<blockquote>
+<p><strong>Terms used in this analysis.</strong> Dotted-underlined terms anywhere below repeat these definitions on hover (<a href="https://github.com/ismayc/basketball-data-science/blob/main/docs/glossary.md">full glossary</a>).</p>
+<ul>
+<li><strong>FGA</strong> — Field-goal attempts.</li>
+<li><strong>eFG%</strong> — Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.</li>
+<li><strong>2-for-1</strong> — Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.</li>
+<li><strong>CI</strong> — Confidence interval.</li>
+</ul>
+</blockquote>
+<!-- /terms -->
+
+<h2>1. What play-by-play data is publicly available?</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Content</th>
+<th>Public?</th>
+<th>Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>PlayByPlayV3</code></strong> (stats.nba.com)</td>
+<td>Every logged event: period, game clock, action type, player, running score, <strong>shot x/y + distance</strong></td>
+<td>Yes, live</td>
+<td>✅ <strong>primary</strong></td>
+</tr>
+<tr>
+<td><code>PlayByPlayV2</code></td>
+<td>Older schema, same events, no shot coordinates</td>
+<td>Yes, live</td>
+<td>✗</td>
+</tr>
+<tr>
+<td><code>ShotChartDetail</code></td>
+<td>~102k shots/season with <code>LOC_X</code>/<code>LOC_Y</code>, zone labels, clock</td>
+<td>Yes, live</td>
+<td>✗ (this study needs non-shot events too)</td>
+</tr>
+<tr>
+<td><code>LeagueGameFinder</code></td>
+<td>Game index by season</td>
+<td>Yes, live</td>
+<td>✅ (game IDs)</td>
+</tr>
+<tr>
+<td>ESPN PBP via <code>hoopR</code> (R)</td>
+<td>Parallel feed, different event coding</td>
+<td>Yes</td>
+<td>✗</td>
+</tr>
+</tbody>
+</table></div>
+<p>All are reached through the <a href="https://github.com/swar/nba_api"><code>nba_api</code></a> Python
+package, which is an unofficial but well-maintained wrapper over the same public
+<code>stats.nba.com</code> endpoints the league's own site calls.</p>
+<p><strong>Coverage:</strong> the full 2023-24 regular season — <strong>1,230 games</strong>, ~500 events each.</p>
+<p>Worth noting for the tracking question: <code>PlayByPlayV3</code> carries <code>xLegacy</code>/<code>yLegacy</code>
+court coordinates on shot events. That is genuine spatial data, live and current —
+unlike raw tracking, which is only available as a frozen 2015-16 archive (see
+<a href="https://github.com/ismayc/tracking-study">tracking-study</a>).</p>
+<hr />
+<h2>2. Pipeline</h2>
+<pre><code>python/01_harvest_pbp.py   stats.nba.com -&gt; data/raw_pbp/&lt;game_id&gt;.parquet  (resumable)
+python/02_analysis.py      -&gt; output/*.csv, figures/*.png + *.html
+R/02_analysis.R            independent R/tidyverse implementation -&gt; output/*_r.csv
+python/04_reconcile.py     compares the two row-by-row, non-zero exit on mismatch
+python/03_findings.py      -&gt; writes the Findings section of this README
+</code></pre>
+<pre><code class="language-bash">pip install nba_api polars plotly kaleido numpy pyarrow
+Rscript -e 'install.packages(c(&quot;tidyverse&quot;,&quot;nanoparquet&quot;))'
+python python/01_harvest_pbp.py --season 2023-24   # ~20 min, rate-limited
+python python/02_analysis.py
+Rscript R/02_analysis.R
+python python/04_reconcile.py   # exits non-zero if the two disagree
+python python/03_findings.py
+</code></pre>
+<p>The reconciliation is not ceremonial. The Python implementation originally
+sorted events by <code>actionNumber</code> <strong>as text</strong> — <code>"100"</code> before <code>"2"</code> — which
+scrambled the score forward-fill and corrupted every window score. The bug was
+caught in review by re-deriving the table with a numeric sort; the independent
+R implementation now guards that class of error permanently, the same
+discipline as <a href="https://github.com/ismayc/jersey-height-study">jersey-height-study</a>.</p>
+<p>One parquet per game, so an interrupted harvest resumes and the analysis never
+re-hits the network.</p>
+<hr />
+<h2>3. Method and every judgment call</h2>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Value</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Periods</td>
+<td><strong>1–3 only</strong></td>
+<td>Q4 is contaminated by score-margin strategy, intentional fouling, and clock-stopping that have nothing to do with <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr></td>
+</tr>
+<tr>
+<td>Window</td>
+<td><strong>final 60 seconds</strong></td>
+<td>Wide enough to contain the whole decision, narrow enough that the rest of the quarter does not dilute it</td>
+</tr>
+<tr>
+<td>Treatment</td>
+<td><strong>first <abbr title="Field-goal attempts.">FGA</abbr> at ≥ 32s</strong></td>
+<td>Conventional threshold: enough for a 24-second opponent possession plus a final possession of your own</td>
+</tr>
+<tr>
+<td>Outcome</td>
+<td><strong>score delta</strong>, not summed shot values</td>
+<td>Free throws in this feed carry an <em>empty</em> <code>shotResult</code>, so summing shot values would silently drop every and-1 and shooting foul. Score deltas capture all scoring</td>
+</tr>
+<tr>
+<td>Second outcome</td>
+<td><strong>net points</strong> (own minus opponent, same window)</td>
+<td>Holding for the last shot is valuable <em>because it denies the opponent a reply</em> — an own-points outcome misses the entire cost side of the trade. Both outcomes are reported</td>
+</tr>
+<tr>
+<td>Score handling</td>
+<td>forward-fill across the game</td>
+<td>Scores are only stamped on scoring events; the fill runs across the whole game, not within period, because periods start from the running total</td>
+</tr>
+<tr>
+<td>Uncertainty</td>
+<td><strong>bootstrap</strong>, not a t-test</td>
+<td>Points in a 60-second window are a small, lumpy, non-normal count (0, 2, 3, 5…)</td>
+</tr>
+<tr>
+<td>Unit of analysis</td>
+<td>team-period</td>
+<td>One row per team per period, not per game</td>
+</tr>
+</tbody>
+</table></div>
+<h3>The confound this design cannot remove</h3>
+<p><strong>A team can only run a <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> if it happens to have the ball early in the window.</strong>
+Which teams have the ball at 40 seconds is not random — they likely just got a stop,
+and may be attacking an unset defense.</p>
+<p>This is stated up front rather than buried, a restricted-sample sensitivity analysis
+is reported alongside the headline, and the write-up does not claim a causal effect.</p>
+<hr />
+<h2>4. Limitations</h2>
+<ol>
+<li><strong>Observational, not causal.</strong> See above. The treatment is chosen by teams, not
+   assigned.</li>
+<li><strong>Possession is inferred from shots, not tracked</strong> — in the original design.
+   Now addressed: Finding 4 redoes the analysis on real possession rows and
+   quantifies exactly how often this proxy misread the choice (it flags 82% of
+   true quick attempts, but only half of true holds).</li>
+<li><strong>One season.</strong> 2023-24 only. No test of whether the pattern holds across eras or
+   rule changes.</li>
+<li><strong>No score-margin control.</strong> A team down 20 behaves differently from a tied team.
+   Not conditioned on.</li>
+<li><strong><abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> ignores free throws.</strong> The shot-quality comparison uses field goals only,
+   so it understates the value of drawing a shooting foul on a drive.</li>
+<li><strong>Team quality is not controlled.</strong> Good offenses both score more and are more
+   likely to have the ball, which inflates the raw gap.</li>
+</ol>
+<hr />
+<h2>Findings</h2>
+<p>Based on <strong>1,230 games</strong> of 2023-24 play-by-play. Every number is generated by
+<code>python/03_findings.py</code> from <code>output/</code>, not typed by hand.</p>
+<h3>1. Teams really do hunt the 2-for-1</h3>
+<p>Of the 7,221 team-periods with a shot in the
+final 60 seconds of Q1–Q3, <strong>78%</strong> took their first shot with 32 or more
+seconds left.</p>
+<p>The share alone is weak evidence — later in the window there is simply more
+opportunity to shoot. The strong evidence is a <strong>local spike exactly at the
+threshold</strong>:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>First shot at</th>
+<th>Mean team-periods per second</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>22–30s (the wait)</td>
+<td>68</td>
+</tr>
+<tr>
+<td><strong>31–33s (the threshold)</strong></td>
+<td><strong>201</strong></td>
+</tr>
+<tr>
+<td>36–40s (later, more opportunity)</td>
+<td>147</td>
+</tr>
+</tbody>
+</table></div>
+<p>Teams bunch at 31–33 seconds <strong>1.37× more</strong> than at 36–40 seconds,
+even though the later band has more chances to shoot and should be higher if nothing
+special happened at 32. That discontinuity is the behaviour itself, visible in the
+raw counts rather than assumed: coaches are running this play deliberately.
+See <code>figures/fig1_first_shot_timing.png</code>.</p>
+<h3>2. The 2-for-1 is associated with more points — on both sides of the ball</h3>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>First shot ≥ 32s (<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>)</th>
+<th>First shot &lt; 32s (held)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Team-periods</td>
+<td>5,614</td>
+<td>1,607</td>
+</tr>
+<tr>
+<td>Mean points in window</td>
+<td><strong>2.347</strong></td>
+<td><strong>1.767</strong></td>
+</tr>
+<tr>
+<td>Mean opponent points</td>
+<td><strong>2.183</strong></td>
+<td><strong>2.283</strong></td>
+</tr>
+<tr>
+<td>Mean <strong>net</strong> points</td>
+<td><strong>+0.163</strong></td>
+<td><strong>-0.516</strong></td>
+</tr>
+<tr>
+<td>Mean field-goal attempts</td>
+<td><strong>2.47</strong></td>
+<td><strong>1.52</strong></td>
+</tr>
+<tr>
+<td>Effective FG%</td>
+<td><strong>0.506</strong></td>
+<td><strong>0.436</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Own-points difference: <strong>+0.579</strong> per team-period
+(95% bootstrap <abbr title="Confidence interval.">CI</abbr> [+0.475, +0.679], excludes zero,
+4,000 resamples).</p>
+<p><strong>Why net matters:</strong> the case for holding the ball is precisely that it denies
+the opponent a reply, so an outcome that only counts a team's own points misses
+half the trade. On net points the raw gap is <strong>+0.679</strong>
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.816]) — but read the
+sensitivity analysis below before taking either raw gap at face value, because
+the "held" group includes many team-periods where the <em>opponent</em> controlled the
+window.</p>
+<p>The mechanism is visible in the <abbr title="Field-goal attempts.">FGA</abbr> row: roughly
+<strong>+0.94 extra shots</strong> per window. That is the extra
+possession, showing up exactly where it should.</p>
+<h3>Sensitivity: narrowing the selection gap</h3>
+<p>Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the own-points gap is <strong>+0.364</strong> (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.512], excludes zero) and the net gap is <strong>+0.188</strong> (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.375], includes zero; n = 2,199 vs 842).</p>
+<p>Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.</p>
+<h3>3. The expected cost never appears</h3>
+<p>The standard objection to the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is that you rush a bad shot to create the
+extra possession. <strong>In this data that cost does not show up.</strong></p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Seconds left</th>
+<th>Effective FG%</th>
+<th>Attempts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–3s</td>
+<td>0.347</td>
+<td>3,818</td>
+</tr>
+<tr>
+<td>4–7s</td>
+<td>0.495</td>
+<td>953</td>
+</tr>
+<tr>
+<td>8–11s</td>
+<td>0.522</td>
+<td>689</td>
+</tr>
+<tr>
+<td>12–15s</td>
+<td>0.535</td>
+<td>570</td>
+</tr>
+<tr>
+<td>16–19s</td>
+<td>0.542</td>
+<td>492</td>
+</tr>
+<tr>
+<td>20–23s</td>
+<td>0.556</td>
+<td>506</td>
+</tr>
+<tr>
+<td>24–27s</td>
+<td>0.539</td>
+<td>747</td>
+</tr>
+<tr>
+<td>28–31s</td>
+<td>0.520</td>
+<td>1,331</td>
+</tr>
+<tr>
+<td>32–35s</td>
+<td>0.520</td>
+<td>1,394</td>
+</tr>
+<tr>
+<td>36–39s</td>
+<td>0.571</td>
+<td>943</td>
+</tr>
+<tr>
+<td>40–43s</td>
+<td>0.532</td>
+<td>850</td>
+</tr>
+<tr>
+<td>44–47s</td>
+<td>0.542</td>
+<td>947</td>
+</tr>
+<tr>
+<td>48–51s</td>
+<td>0.569</td>
+<td>920</td>
+</tr>
+<tr>
+<td>52–55s</td>
+<td>0.559</td>
+<td>904</td>
+</tr>
+<tr>
+<td>56–59s</td>
+<td>0.562</td>
+<td>931</td>
+</tr>
+</tbody>
+</table></div>
+<p>Shots taken with 32+ seconds left average <strong><abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.551</strong> — ordinary,
+in-rhythm shots. The genuinely bad shot is the buzzer-beater: <strong><abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.347</strong>
+in the last four seconds.</p>
+<p>That reframes the decision. The <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> does not trade a good shot for a bad one. It
+<strong>adds</strong> a normal-quality possession, because the desperation heave at the buzzer
+gets taken either way. The team that holds gives up the extra possession and still
+takes the bad shot.</p>
+<h3>4. Possession-level upgrade: the decision-team design</h3>
+<p>The proxy limitation is closed with real possessions (pbpstats rows with
+start/end times via the bulk archive in <a href="https://github.com/ismayc/basketball-data-science/blob/main/docs/public-data-availability.md">public-data-availability</a>;
+1,228 of 1,230 games — <code>python/05_possession_analysis.py</code> also documents why a
+literal translation of the old design just relocates the blindness). The
+sharper frame: <strong>at the 40-second mark of every Q1–Q3, exactly one team has
+the ball — the team actually facing the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> decision.</strong> 3,683 decision
+possessions, split by the observed choice:</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>n</th>
+<th>Share</th>
+<th>Net pts from 40s</th>
+<th>Later possessions</th>
+<th>ended in TO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Quick</strong> (released ≥28s left)</td>
+<td>3,112</td>
+<td><strong>84.5%</strong></td>
+<td><strong>+0.48</strong></td>
+<td>1.09</td>
+<td>11.8%</td>
+</tr>
+<tr>
+<td>Normal (16–27s)</td>
+<td>547</td>
+<td>14.9%</td>
+<td>+0.01</td>
+<td>0.71</td>
+<td>9.1%</td>
+</tr>
+<tr>
+<td><strong>Hold</strong> (carried past 15s)</td>
+<td>24</td>
+<td><strong>0.7%</strong></td>
+<td>-0.21</td>
+<td>0.21</td>
+<td>8.3%</td>
+</tr>
+</tbody>
+</table></div>
+<p>Three things fall out:</p>
+<ol>
+<li><strong>The debate is over in practice.</strong> Teams with the ball at the decision
+   moment go quick 84% of the time; genuine holds are nearly
+   extinct — 24 team-periods in a full season. The argument this study
+   set out to test has largely been settled by the league's behaviour.</li>
+<li><strong>The mechanism is now measured directly</strong>: quick teams average
+   1.09 further possessions after the mark vs
+   0.21 for holds — the extra possession counted,
+   not inferred from shots.</li>
+<li>Quick minus hold on net points from the mark:
+   <strong>+0.69 [+0.23, +1.20]</strong> —
+   consistent with the tactic paying, but with 24 holds the
+   comparison is honest about being underpowered. When a strategy wins the
+   behavioural argument this thoroughly, its control group disappears.</li>
+</ol>
+<p>The first-shot proxy, scored against observed choices: it flags
+82% of true quicks but correctly identifies
+only 50% of true holds — quantifying exactly
+how much limitation 2 mattered.</p>
+<h3>5. What this does not establish</h3>
+<p>The treatment is not randomly assigned, and the biggest confound is possession
+timing: a team that does not get the ball until 20 seconds remain <em>cannot</em> run a
+<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>, and is not comparable to one that had it at 40 seconds. Some of the gap is
+therefore selection — teams with the ball earlier were more likely to have just
+gotten a stop, and may be in transition against an unset defense.</p>
+<p>The sensitivity analysis narrows that gap but does not close it. The honest
+statement is: <strong>teams that shoot early score more in the window, the extra
+possession is real and measurable, and the usual objection to the strategy — a
+rushed, bad shot — is not visible in the data. What limits the payoff is not
+shot quality but the opponent's reply: on a net basis, in the comparable
+sample, one season of data cannot cleanly distinguish the advantage from
+zero.</strong> A causal estimate would need possession-level tracking of when each
+team actually gained the ball, which is the natural next step.</p>
+<h2>Interactive figures</h2>
+<p>Rendered by the Python implementation; hover for values. Static R twins live in the repo.</p>
+<figure class="figure-card"><iframe src="figures/fig1_first_shot_timing.html" loading="lazy" title="First shot timing"></iframe><figcaption>First shot timing</figcaption></figure>
+<figure class="figure-card"><iframe src="figures/fig2_efg_by_clock.html" loading="lazy" title="Efg by clock"></iframe><figcaption>Efg by clock</figcaption></figure>
+</main>
+<footer>Public data · dual-implementation reconciled · every gate scripted ·
+<a href="https://github.com/ismayc/basketball-data-science">the family on GitHub</a></footer>
+</body>
+</html>
