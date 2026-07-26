@@ -10,6 +10,15 @@ Coaches genuinely disagree. This measures both sides of the trade on a full seas
 
 ---
 
+<!-- terms -->
+> **Terms used in this analysis.** Dotted-underlined terms anywhere below repeat these definitions on hover ([full glossary](../docs/glossary.md)).
+>
+> - **FGA** — Field-goal attempts.
+> - **eFG%** — Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.
+> - **2-for-1** — Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.
+> - **CI** — Confidence interval.
+<!-- /terms -->
+
 ## 1. What play-by-play data is publicly available?
 
 | Source | Content | Public? | Used |
@@ -69,9 +78,9 @@ re-hits the network.
 
 | Decision | Value | Why |
 |---|---|---|
-| Periods | **1–3 only** | Q4 is contaminated by score-margin strategy, intentional fouling, and clock-stopping that have nothing to do with 2-for-1 |
+| Periods | **1–3 only** | Q4 is contaminated by score-margin strategy, intentional fouling, and clock-stopping that have nothing to do with <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> |
 | Window | **final 60 seconds** | Wide enough to contain the whole decision, narrow enough that the rest of the quarter does not dilute it |
-| Treatment | **first FGA at ≥ 32s** | Conventional threshold: enough for a 24-second opponent possession plus a final possession of your own |
+| Treatment | **first <abbr title="Field-goal attempts.">FGA</abbr> at ≥ 32s** | Conventional threshold: enough for a 24-second opponent possession plus a final possession of your own |
 | Outcome | **score delta**, not summed shot values | Free throws in this feed carry an *empty* `shotResult`, so summing shot values would silently drop every and-1 and shooting foul. Score deltas capture all scoring |
 | Second outcome | **net points** (own minus opponent, same window) | Holding for the last shot is valuable *because it denies the opponent a reply* — an own-points outcome misses the entire cost side of the trade. Both outcomes are reported |
 | Score handling | forward-fill across the game | Scores are only stamped on scoring events; the fill runs across the whole game, not within period, because periods start from the running total |
@@ -80,7 +89,7 @@ re-hits the network.
 
 ### The confound this design cannot remove
 
-**A team can only run a 2-for-1 if it happens to have the ball early in the window.**
+**A team can only run a <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> if it happens to have the ball early in the window.**
 Which teams have the ball at 40 seconds is not random — they likely just got a stop,
 and may be attacking an unset defense.
 
@@ -101,7 +110,7 @@ is reported alongside the headline, and the write-up does not claim a causal eff
    rule changes.
 4. **No score-margin control.** A team down 20 behaves differently from a tied team.
    Not conditioned on.
-5. **eFG% ignores free throws.** The shot-quality comparison uses field goals only,
+5. **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> ignores free throws.** The shot-quality comparison uses field goals only,
    so it understates the value of drawing a shooting foul on a drive.
 6. **Team quality is not controlled.** Good offenses both score more and are more
    likely to have the ball, which inflates the raw gap.
@@ -137,7 +146,7 @@ See `figures/fig1_first_shot_timing.png`.
 
 ### 2. The 2-for-1 is associated with more points — on both sides of the ball
 
-| | First shot ≥ 32s (2-for-1) | First shot < 32s (held) |
+| | First shot ≥ 32s (<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>) | First shot < 32s (held) |
 |---|---|---|
 | Team-periods | 5,614 | 1,607 |
 | Mean points in window | **2.347** | **1.767** |
@@ -147,30 +156,30 @@ See `figures/fig1_first_shot_timing.png`.
 | Effective FG% | **0.506** | **0.436** |
 
 Own-points difference: **+0.579** per team-period
-(95% bootstrap CI [+0.475, +0.679], excludes zero,
+(95% bootstrap <abbr title="Confidence interval.">CI</abbr> [+0.475, +0.679], excludes zero,
 4,000 resamples).
 
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **+0.679**
-(95% CI [+0.544, +0.816]) — but read the
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.816]) — but read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
 
-The mechanism is visible in the FGA row: roughly
+The mechanism is visible in the <abbr title="Field-goal attempts.">FGA</abbr> row: roughly
 **+0.94 extra shots** per window. That is the extra
 possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the own-points gap is **+0.364** (95% CI [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% CI [-0.002, +0.375], includes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds — so both groups had the ball at broadly similar times — the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.512], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.375], includes zero; n = 2,199 vs 842).
 
 Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.
 
 ### 3. The expected cost never appears
 
-The standard objection to the 2-for-1 is that you rush a bad shot to create the
+The standard objection to the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is that you rush a bad shot to create the
 extra possession. **In this data that cost does not show up.**
 
 | Seconds left | Effective FG% | Attempts |
@@ -191,11 +200,11 @@ extra possession. **In this data that cost does not show up.**
 | 52–55s | 0.559 | 904 |
 | 56–59s | 0.562 | 931 |
 
-Shots taken with 32+ seconds left average **eFG% 0.551** — ordinary,
-in-rhythm shots. The genuinely bad shot is the buzzer-beater: **eFG% 0.347**
+Shots taken with 32+ seconds left average **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.551** — ordinary,
+in-rhythm shots. The genuinely bad shot is the buzzer-beater: **<abbr title="Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.">eFG%</abbr> 0.347**
 in the last four seconds.
 
-That reframes the decision. The 2-for-1 does not trade a good shot for a bad one. It
+That reframes the decision. The <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> does not trade a good shot for a bad one. It
 **adds** a normal-quality possession, because the desperation heave at the buzzer
 gets taken either way. The team that holds gives up the extra possession and still
 takes the bad shot.
@@ -207,7 +216,7 @@ start/end times via the bulk archive in `../docs/public-data-availability.md`;
 1,228 of 1,230 games — `python/05_possession_analysis.py` also documents why a
 literal translation of the old design just relocates the blindness). The
 sharper frame: **at the 40-second mark of every Q1–Q3, exactly one team has
-the ball — the team actually facing the 2-for-1 decision.** 3,683 decision
+the ball — the team actually facing the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> decision.** 3,683 decision
 possessions, split by the observed choice:
 
 | Choice | n | Share | Net pts from 40s | Later possessions | ended in TO |
@@ -241,7 +250,7 @@ how much limitation 2 mattered.
 
 The treatment is not randomly assigned, and the biggest confound is possession
 timing: a team that does not get the ball until 20 seconds remain *cannot* run a
-2-for-1, and is not comparable to one that had it at 40 seconds. Some of the gap is
+<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>, and is not comparable to one that had it at 40 seconds. Some of the gap is
 therefore selection — teams with the ball earlier were more likely to have just
 gotten a stop, and may be in transition against an unset defense.
 
