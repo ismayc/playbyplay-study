@@ -33,7 +33,10 @@ All are reached through the [`nba_api`](https://github.com/swar/nba_api) Python
 package, which is an unofficial but well-maintained wrapper over the same public
 `stats.nba.com` endpoints the league's own site calls.
 
-**Coverage:** the full 2023-24 regular season, **1,230 games**, ~500 events each.
+<!-- gen:coverage -->
+**Coverage:** the full 2023-24 regular season, **1,230 games**, ~500
+events each.
+<!-- /gen:coverage -->
 
 Worth noting for the tracking question: `PlayByPlayV3` carries `xLegacy`/`yLegacy`
 court coordinates on shot events. That is genuine spatial data, live and current,
@@ -104,8 +107,8 @@ is reported alongside the headline, and the write-up does not claim a causal eff
    assigned.
 2. **Possession is inferred from shots, not tracked**, in the original design.
    Now addressed: Finding 4 redoes the analysis on real possession rows and
-   quantifies exactly how often this proxy misread the choice (it flags 82% of
-   true quick attempts, but only half of true holds).
+   quantifies exactly how often this proxy misread the choice (<!-- gen:proxy -->it flags 82% of
+   true quick attempts, but only 50% of true holds<!-- /gen:proxy -->).
 3. **One season.** 2023-24 only. No test of whether the pattern holds across eras or
    rule changes.
 4. **No score-margin control.** A team down 20 behaves differently from a tied team.
@@ -119,12 +122,14 @@ is reported alongside the headline, and the write-up does not claim a causal eff
 
 ## Extension: teams and quarters
 
+<!-- gen:extension -->
 `python/06_team_quarter.py` (gated, wired into `run_checks.sh`) joins the
 committed window table back to team identities and asks who hunts the
-<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> (Sacramento 85% to Chicago 73%; league 77.7%) and whether the
-quarter matters (it barely does: 78.4% / 78.0% / 76.8% across Q1-Q3, with
-the payoff ordering intact in each). Outputs: `output/team_2for1.csv`,
-`output/quarter_2for1.csv`.
+<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> (Sacramento 85% to Chicago 73%; league 77.7%)
+and whether the quarter matters (it barely does: 78.4% / 78.0% / 76.8%
+across Q1-Q3, with the payoff ordering intact in each). Outputs:
+`output/team_2for1.csv`, `output/quarter_2for1.csv`.
+<!-- /gen:extension -->
 
 ## Findings
 
@@ -171,7 +176,7 @@ Own-points difference: **+0.579** per team-period
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **+0.679**
-(95% <abbr title="Confidence interval.">CI</abbr> [+0.544, +0.812]). But read the
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.541, +0.818]). But read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
@@ -182,7 +187,7 @@ possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.218, +0.511], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.005, +0.379], includes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.364** (95% <abbr title="Confidence interval.">CI</abbr> [+0.216, +0.509], excludes zero) and the net gap is **+0.188** (95% <abbr title="Confidence interval.">CI</abbr> [-0.002, +0.378], includes zero; n = 2,199 vs 842).
 
 Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives; the net advantage narrows to the edge of what one season of data can distinguish from zero. That asymmetry is itself informative: the extra possession is real, but the opponent's reply claws back much of its value.
 

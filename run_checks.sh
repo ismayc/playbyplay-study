@@ -20,3 +20,7 @@ $PY python/04_reconcile.py | tail -1
 echo
 echo "=== team/quarter extension: offline gate replay ==="
 $PY python/06_team_quarter.py --check | tail -1
+
+echo
+echo "=== findings: README numbers regenerate from outputs ==="
+$PY python/03_findings.py --check | tail -1

@@ -1,12 +1,22 @@
-"""Write the Findings section of the play-by-play README from computed output.
+"""Write every analysis number in the play-by-play README from computed output.
 
-Same discipline as the jersey study: no number in the prose is typed by hand, so
-the narrative cannot drift from the analysis when the data is refreshed.
+Same discipline as the jersey study: no number in the prose is typed by hand,
+so the narrative cannot drift from the analysis when the data is refreshed.
+Ownership covers the Findings section plus three marked regions elsewhere in
+the README (<!-- gen:coverage -->, <!-- gen:proxy -->, <!-- gen:extension -->).
 
-Run: python python/03_findings.py
+The generator writes plain text; hover tooltips are re-applied afterwards by
+the family glossary tool (../basketball-analysis-tools/glossary.py --sync).
+
+Run:    python python/03_findings.py            rewrite the owned regions
+        python python/03_findings.py --check    fail if the committed README
+                                                (abbr tags stripped) differs
+                                                from what a rewrite would say
 """
 from __future__ import annotations
 
+import re
+import sys
 from pathlib import Path
 
 import polars as pl
@@ -15,6 +25,25 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output"
 README = ROOT / "README.md"
 MARKER = "## Findings"
+ABBR = re.compile(r'<abbr title="[^"]*">([^<]*)</abbr>')
+
+# Tricode -> the short market name used in prose.
+TEAM_CITY = {
+    "ATL": "Atlanta", "BOS": "Boston", "BKN": "Brooklyn",
+    "CHA": "Charlotte", "CHI": "Chicago", "CLE": "Cleveland",
+    "DAL": "Dallas", "DEN": "Denver", "DET": "Detroit",
+    "GSW": "Golden State", "HOU": "Houston", "IND": "Indiana",
+    "LAC": "LA Clippers", "LAL": "LA Lakers", "MEM": "Memphis",
+    "MIA": "Miami", "MIL": "Milwaukee", "MIN": "Minnesota",
+    "NOP": "New Orleans", "NYK": "New York", "OKC": "Oklahoma City",
+    "ORL": "Orlando", "PHI": "Philadelphia", "PHX": "Phoenix",
+    "POR": "Portland", "SAC": "Sacramento", "SAS": "San Antonio",
+    "TOR": "Toronto", "UTA": "Utah", "WAS": "Washington",
+}
+
+
+def strip_abbr(text: str) -> str:
+    return ABBR.sub(r"\1", text)
 
 
 def build() -> str:
@@ -220,13 +249,82 @@ team actually gained the ball, which is the natural next step.
 """
 
 
-def main() -> int:
-    text = README.read_text()
+def build_regions() -> dict[str, str]:
+    """Owned regions outside the Findings section, keyed by marker name.
+
+    Same discipline as build(): prose is fixed here, every number is computed.
+    """
+    windows = pl.read_csv(OUT / "team_period_windows.csv")
+    n_games = windows["gameId"].n_unique()
+
+    team = pl.read_csv(OUT / "team_2for1.csv").sort("rate", descending=True)
+    top = team.row(0, named=True)
+    bot = team.row(-1, named=True)
+    league = team["tfo"].sum() / team["windows"].sum()
+    top_city = TEAM_CITY.get(top["teamTricode"], top["teamTricode"])
+    bot_city = TEAM_CITY.get(bot["teamTricode"], bot["teamTricode"])
+
+    quarter = pl.read_csv(OUT / "quarter_2for1.csv").sort("period")
+    q_rates = " / ".join(f"{r:.1%}" for r in quarter["rate"])
+    ordering_holds = all(
+        r["own_tfo"] > r["own_hold"] and r["net_tfo"] > r["net_hold"]
+        for r in quarter.iter_rows(named=True))
+    ordering = ("with the payoff ordering intact in each" if ordering_holds
+                else "though the payoff ordering flips in at least one")
+
+    pv = pl.read_csv(OUT / "proxy_vs_possession.csv").row(0, named=True)
+
+    coverage = f"""
+**Coverage:** the full 2023-24 regular season, **{n_games:,} games**, ~500
+events each.
+"""
+
+    proxy = (f"it flags {pv['quick_correctly_flagged']:.0%} of\n"
+             f"   true quick attempts, but only "
+             f"{pv['hold_correctly_unflagged']:.0%} of true holds")
+
+    extension = f"""
+`python/06_team_quarter.py` (gated, wired into `run_checks.sh`) joins the
+committed window table back to team identities and asks who hunts the
+2-for-1 ({top_city} {top['rate']:.0%} to {bot_city} {bot['rate']:.0%}; league {league:.1%})
+and whether the quarter matters (it barely does: {q_rates}
+across Q1-Q3, {ordering}). Outputs:
+`output/team_2for1.csv`, `output/quarter_2for1.csv`.
+"""
+    return {"coverage": coverage, "proxy": proxy, "extension": extension}
+
+
+def regenerate(text: str) -> str:
+    """The whole README with every owned region rebuilt from output/."""
+    for name, body in build_regions().items():
+        pattern = re.compile(
+            rf"<!-- gen:{name} -->.*?<!-- /gen:{name} -->", re.S)
+        if not pattern.search(text):
+            raise SystemExit(f"README.md is missing the gen:{name} markers")
+        text = pattern.sub(
+            lambda _m: f"<!-- gen:{name} -->{body}<!-- /gen:{name} -->",
+            text, count=1)
     head = text.split(MARKER)[0].rstrip()
-    README.write_text(head + "\n\n" + build())
-    print(f"Updated Findings in {README}")
+    return head + "\n\n" + build()
+
+
+def main(argv: list[str]) -> int:
+    current = README.read_text()
+    if "--check" in argv:
+        plain = strip_abbr(current)
+        if plain != regenerate(plain):
+            print("Committed README analysis numbers differ from what "
+                  "output/ supports. Fix: python python/03_findings.py, "
+                  "then glossary.py --sync.")
+            print("PLAYBYPLAY FINDINGS CHECK FAILED")
+            return 1
+        print("PLAYBYPLAY FINDINGS CHECK PASSED (coverage, proxy, "
+              "extension, and Findings all regenerate from output/)")
+        return 0
+    README.write_text(regenerate(current))
+    print(f"Updated generated regions + Findings in {README}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
