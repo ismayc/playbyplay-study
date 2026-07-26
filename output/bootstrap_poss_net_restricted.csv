@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+poss_net_restricted_20_45s,-0.5914825174825176,-0.7836734965034966,-0.3914234965034965,4000,2500,715

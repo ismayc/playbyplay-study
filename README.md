@@ -93,9 +93,10 @@ is reported alongside the headline, and the write-up does not claim a causal eff
 
 1. **Observational, not causal.** See above. The treatment is chosen by teams, not
    assigned.
-2. **Possession is inferred from shots, not tracked.** "First shot in the window" is
-   a proxy for "had the ball early." A team that got the ball at 45s and turned it
-   over without shooting is invisible to this design.
+2. **Possession is inferred from shots, not tracked** — in the original design.
+   Now addressed: Finding 4 redoes the analysis on real possession rows and
+   quantifies exactly how often this proxy misread the choice (it flags 82% of
+   true quick attempts, but only half of true holds).
 3. **One season.** 2023-24 only. No test of whether the pattern holds across eras or
    rule changes.
 4. **No score-margin control.** A team down 20 behaves differently from a tied team.
@@ -199,7 +200,44 @@ That reframes the decision. The 2-for-1 does not trade a good shot for a bad one
 gets taken either way. The team that holds gives up the extra possession and still
 takes the bad shot.
 
-### 4. What this does not establish
+### 4. Possession-level upgrade: the decision-team design
+
+The proxy limitation is closed with real possessions (pbpstats rows with
+start/end times via the bulk archive in `../docs/public-data-availability.md`;
+1,228 of 1,230 games — `python/05_possession_analysis.py` also documents why a
+literal translation of the old design just relocates the blindness). The
+sharper frame: **at the 40-second mark of every Q1–Q3, exactly one team has
+the ball — the team actually facing the 2-for-1 decision.** 3,683 decision
+possessions, split by the observed choice:
+
+| Choice | n | Share | Net pts from 40s | Later possessions | ended in TO |
+|---|---|---|---|---|---|
+| **Quick** (released ≥28s left) | 3,112 | **84.5%** | **+0.48** | 1.09 | 11.8% |
+| Normal (16–27s) | 547 | 14.9% | +0.01 | 0.71 | 9.1% |
+| **Hold** (carried past 15s) | 24 | **0.7%** | -0.21 | 0.21 | 8.3% |
+
+Three things fall out:
+
+1. **The debate is over in practice.** Teams with the ball at the decision
+   moment go quick 84% of the time; genuine holds are nearly
+   extinct — 24 team-periods in a full season. The argument this study
+   set out to test has largely been settled by the league's behaviour.
+2. **The mechanism is now measured directly**: quick teams average
+   1.09 further possessions after the mark vs
+   0.21 for holds — the extra possession counted,
+   not inferred from shots.
+3. Quick minus hold on net points from the mark:
+   **+0.69 [+0.23, +1.20]** —
+   consistent with the tactic paying, but with 24 holds the
+   comparison is honest about being underpowered. When a strategy wins the
+   behavioural argument this thoroughly, its control group disappears.
+
+The first-shot proxy, scored against observed choices: it flags
+82% of true quicks but correctly identifies
+only 50% of true holds — quantifying exactly
+how much limitation 2 mattered.
+
+### 5. What this does not establish
 
 The treatment is not randomly assigned, and the biggest confound is possession
 timing: a team that does not get the ball until 20 seconds remain *cannot* run a

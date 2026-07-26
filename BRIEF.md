@@ -24,6 +24,12 @@ smaller than the box score makes it look.
   the net edge is about **+0.2 points per quarter-end and we can't rule out
   zero** with one season of data. Run it when the possession comes naturally;
   it's not worth forcing.
+- **Update from real possession data:** looking only at the team that actually
+  has the ball at the 40-second mark, the league has already decided — they go
+  quick **85% of the time**, and genuine hold-for-last-shot possessions are
+  nearly extinct (24 in a full season). The quick group really does get the
+  extra possession (1.1 vs 0.2 later possessions). If anyone in the room
+  argues for holding, the strongest data point is that almost nobody does.
 
 ## For analytics peers
 
@@ -34,7 +40,11 @@ CIs (4,000 reps). Selection is the elephant: possession timing is not random,
 so we report a restricted 20–45s comparison — own-points gap survives
 (+0.36 [+0.22, +0.51]), net gap does not (+0.19 [−0.00, +0.38]). Mechanism
 checks (eFG by clock, FGA counts) carry the causal-ish story; no causal claim
-is made. Implemented in Python and R with a row-level reconciliation gate —
+is made. A possession-level rebuild (pbpstats rows via the bulk archive)
+conditions on the team holding the ball at the 40s mark and splits by observed
+choice: quick 84.5% / normal 14.9% / hold 0.7%; quick—hold net from the mark
++0.69 [+0.23, +1.20], underpowered because holds barely exist; the first-shot
+proxy flags 82% of true quicks but only half of true holds. Implemented in Python and R with a row-level reconciliation gate —
 which matters here, because the original single-implementation version had a
 text-vs-numeric sort bug that corrupted every window score and shifted the
 headline gap from +0.36 to +0.58. Possession-level data (pbpstats) is the
