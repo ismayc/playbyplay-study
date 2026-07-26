@@ -47,8 +47,7 @@ choice: quick 84.5% / normal 14.9% / hold 0.7%; quick—hold net from the mark
 proxy flags 82% of true quicks but only half of true holds. Implemented in Python and R with a row-level reconciliation gate —
 which matters here, because the original single-implementation version had a
 text-vs-numeric sort bug that corrupted every window score and shifted the
-headline gap from +0.36 to +0.58. Possession-level data (pbpstats) is the
-documented upgrade path.
+headline gap from +0.36 to +0.58.
 
 ## For the executive summary (three bullets)
 
