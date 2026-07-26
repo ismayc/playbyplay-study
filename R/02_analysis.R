@@ -33,6 +33,7 @@ ROOT <- normalizePath(file.path(dirname(sub("^--file=", "", grep("^--file=", com
 if (is.na(ROOT) || !dir.exists(ROOT)) ROOT <- normalizePath(".")
 
 RAW_DIR <- file.path(ROOT, "data", "raw_pbp")
+source(file.path(ROOT, "R", "functions.R"))  # pure functions, unit-tested
 OUT_DIR <- file.path(ROOT, "output")
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
@@ -52,8 +53,7 @@ events <- events %>%
     # actionNumber arrives as text; MUST be numeric before ordering, or
     # "100" sorts before "2" and the score forward-fill is scrambled.
     action_num = as.integer(actionNumber),
-    secs_left = as.numeric(str_match(clock, "PT(\\d+)M")[, 2]) * 60 +
-                as.numeric(str_match(clock, "M([\\d.]+)S")[, 2]),
+    secs_left = parse_clock_secs(clock),
     is_fga = isFieldGoal == "1",
     made = shotResult == "Made",
     shot_value = suppressWarnings(as.numeric(shotValue)),
@@ -148,17 +148,7 @@ write_csv(summary_tbl, file.path(OUT_DIR, "two_for_one_summary_r.csv"))
 print(as.data.frame(summary_tbl))
 
 # ---- Bootstraps (R RNG, so reconciliation compares CI overlap, not equality) -
-boot_diff <- function(frame, outcome, seed, reps = 4000) {
-  a <- frame[[outcome]][frame$two_for_one]
-  b <- frame[[outcome]][!frame$two_for_one]
-  set.seed(seed)
-  boots <- map_dbl(seq_len(reps), function(i) {
-    mean(sample(a, replace = TRUE)) - mean(sample(b, replace = TRUE))
-  })
-  ci <- quantile(boots, c(0.025, 0.975))
-  tibble(estimate = mean(a) - mean(b), ci_lo = ci[[1]], ci_hi = ci[[2]],
-         reps = reps, n_treated = length(a), n_control = length(b))
-}
+# boot_diff() lives in R/functions.R and is unit-tested.
 
 full_pts <- boot_diff(team_periods, "points", seed = 42)
 full_net <- boot_diff(team_periods, "net", seed = 43)
