@@ -1,7 +1,7 @@
 # Play-by-play study — does the end-of-quarter 2-for-1 pay?
 
-Study addressing `../requirements.md` requirement #5 (*play-by-play and event
-data*) and #4 (*models that inform basketball decision-making*).
+A full-season play-by-play study in the [basketball-data-science](https://github.com/ismayc/basketball-data-science)
+family: event data turned into a basketball decision.
 
 **The question.** With 30–40 seconds left in a quarter, a team with the ball can
 shoot quickly — hoping to get one more possession before the buzzer, two shots for
@@ -11,7 +11,7 @@ Coaches genuinely disagree. This measures both sides of the trade on a full seas
 ---
 
 <!-- terms -->
-> **Terms used in this analysis.** Dotted-underlined terms anywhere below repeat these definitions on hover ([full glossary](../docs/glossary.md)).
+> **Terms used in this analysis.** Dotted-underlined terms anywhere below repeat these definitions on hover ([full glossary](https://github.com/ismayc/basketball-data-science/blob/main/docs/glossary.md)).
 >
 > - **FGA** — Field-goal attempts.
 > - **eFG%** — Effective field-goal percentage: field-goal percentage with made threes counted 1.5x, putting twos and threes on one points scale.
@@ -38,7 +38,7 @@ package, which is an unofficial but well-maintained wrapper over the same public
 Worth noting for the tracking question: `PlayByPlayV3` carries `xLegacy`/`yLegacy`
 court coordinates on shot events. That is genuine spatial data, live and current —
 unlike raw tracking, which is only available as a frozen 2015-16 archive (see
-`../tracking-study`).
+[tracking-study](https://github.com/ismayc/tracking-study)).
 
 ---
 
@@ -67,7 +67,7 @@ sorted events by `actionNumber` **as text** — `"100"` before `"2"` — which
 scrambled the score forward-fill and corrupted every window score. The bug was
 caught in review by re-deriving the table with a numeric sort; the independent
 R implementation now guards that class of error permanently, the same
-discipline as `../jersey-height-study`.
+discipline as [jersey-height-study](https://github.com/ismayc/jersey-height-study).
 
 One parquet per game, so an interrupted harvest resumes and the analysis never
 re-hits the network.
@@ -212,7 +212,7 @@ takes the bad shot.
 ### 4. Possession-level upgrade: the decision-team design
 
 The proxy limitation is closed with real possessions (pbpstats rows with
-start/end times via the bulk archive in `../docs/public-data-availability.md`;
+start/end times via the bulk archive in [public-data-availability](https://github.com/ismayc/basketball-data-science/blob/main/docs/public-data-availability.md);
 1,228 of 1,230 games — `python/05_possession_analysis.py` also documents why a
 literal translation of the old design just relocates the blindness). The
 sharper frame: **at the 40-second mark of every Q1–Q3, exactly one team has
