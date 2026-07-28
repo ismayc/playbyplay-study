@@ -7,6 +7,25 @@ Coaches disagree about this in public. A full season of play-by-play
 (all 1,230 games of 2023-24) lets us ask two separable questions: do teams
 actually play the 2-for-1, and does it pay?
 
+<div class="tiles">
+<div class="tile"><div class="label">First shot at 32+ seconds</div>
+<div class="value">78%</div>
+<div class="sub">Of 7,221 final-minute team-periods in quarters one through three.</div></div>
+<div class="tile"><div class="label">Launch-rate spike at 31&ndash;33s</div>
+<div class="value">1.37&times;</div>
+<div class="sub">201 team-periods per second, versus 147 in the 36&ndash;40 second band.</div></div>
+<div class="tile"><div class="label">Own-points edge</div>
+<div class="value">+0.58</div>
+<div class="sub">Points per team-period over holding; on net points it shrinks to about +0.2.</div></div>
+<div class="tile"><div class="label">The reconcile gate</div>
+<div class="value">+0.36 &rarr; +0.58</div>
+<div class="sub">Naive versus corrected estimate after a text-sort bug was caught.</div></div>
+</div>
+
+<div class="eyebrow beat">The fingerprint</div>
+
+## A spike at 31 seconds is a decision, not basketball
+
 The first question has a sharp answer, and it comes from a discontinuity
 rather than an average. Of the 7,221 team-periods with a shot in the final
 minute of quarters one through three, 78% took their first shot with 32 or
@@ -19,6 +38,10 @@ Nothing in the flow of a basketball game produces a spike exactly there
 except a decision rule.
 
 {{fig:fig1_first_shot_timing|When the first shot of the final minute goes up. This figure is the behavioral fingerprint: the spike at 31–33 seconds is the 2-for-1 threshold made visible, and no smooth basketball process puts it there. The discontinuity, not the 78% share, is the proof that teams deliberately play the 2-for-1.}}
+
+<div class="eyebrow beat">The payoff</div>
+
+## The extra possession is real. The edge is thinner than advertised.
 
 So teams do it. Should they? Counting a team's own points, 2-for-1 windows
 produce +0.58 more points per team-period than holds (95% bootstrap CI
@@ -38,6 +61,10 @@ survive its own accounting.
 
 {{fig:fig2_efg_by_clock|Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the 2-for-1 is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)}}
 
+<div class="eyebrow beat">The scouting report</div>
+
+## Everybody plays it. Sacramento just plays it hardest.
+
 Two natural follow-ups deserve their own figures. First, who actually
 hunts the 2-for-1? The behavioral dial is team-controlled, and the league
 spread is real but modest: Sacramento leads at 85% of its final-minute
@@ -46,6 +73,10 @@ league-wide habit with team accents, not a strategy some teams run and
 others refuse.
 
 {{fig:fig3_team_2for1|Every team's 2-for-1 rate, sorted, with the league line marked. The scouting read: the spread from Sacramento (85%) to Chicago (73%) is about 12 points, so opponent tendency is worth knowing but nobody truly abstains. Hover a team for its window count and points outcomes.}}
+
+<div class="eyebrow beat">Context check</div>
+
+## The clock decides, not the quarter
 
 Second, does the quarter matter? Almost not at all. The 2-for-1 rate is
 78.4% in the first quarter, 78.0% in the second, and 76.8% in the third.
@@ -56,6 +87,10 @@ the game, at least through three quarters (the fourth is excluded by
 design, because endgame strategy changes everything).
 
 {{fig:fig4_quarter_2for1|Own points per window by quarter, 2-for-1 versus hold. Necessary because "does context change the answer?" is the first question a coach asks: the bars barely move across quarters, so the recommendation survives without a quarter-by-quarter carve-out.}}
+
+<div class="eyebrow beat">The reconcile gate</div>
+
+## These numbers were wrong once. That is why you can trust them.
 
 One methodological note belongs in the story rather than a footnote,
 because it explains why these numbers can be trusted. The first version
