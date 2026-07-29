@@ -111,24 +111,27 @@ def figures(team: pl.DataFrame, quarter: pl.DataFrame) -> None:
     labels = [f"Q{q}" for q in quarter["period"]]
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        name="2-for-1 taken", x=labels, y=quarter["own_tfo"],
+        name="2-for-1 taken", y=labels, x=quarter["own_tfo"],
+        orientation="h",
         marker=dict(color="#1E3A5F", line=dict(color="white", width=1)),
         customdata=[[round(r, 3), round(n, 2)] for r, n in
                     quarter.select("rate", "net_tfo").rows()],
-        hovertemplate=("%{x} 2-for-1: %{y:.2f} own pts/window"
+        hovertemplate=("%{y} 2-for-1: %{x:.2f} own pts/window"
                        "<br>net %{customdata[1]:+.2f} · taken in "
                        "%{customdata[0]:.0%} of windows<extra></extra>")))
     fig.add_trace(go.Bar(
-        name="held", x=labels, y=quarter["own_hold"],
+        name="held", y=labels, x=quarter["own_hold"],
+        orientation="h",
         marker=dict(color="#9AAFC9", line=dict(color="white", width=1)),
         customdata=[[round(n, 2)] for n in quarter["net_hold"]],
-        hovertemplate=("%{x} held: %{y:.2f} own pts/window"
+        hovertemplate=("%{y} held: %{x:.2f} own pts/window"
                        "<br>net %{customdata[0]:+.2f}<extra></extra>")))
     fig.update_layout(
         title="Does the quarter matter? Own points per window, 2-for-1 vs "
               "hold, by quarter",
-        yaxis_title="own points per window", barmode="group",
+        xaxis_title="own points per window", barmode="group", height=340,
         template="plotly_white",
+        yaxis=dict(autorange="reversed"),
         legend=dict(orientation="h", y=1.02, x=0, yanchor="bottom"))
     fig.write_html(FIG / "fig4_quarter_2for1.html", include_plotlyjs="cdn")
 
