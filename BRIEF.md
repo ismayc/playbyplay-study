@@ -26,7 +26,7 @@ smaller than the box score makes it look.
   it's not worth forcing.
 - **Update from real possession data:** looking only at the team that actually
   has the ball at the 40-second mark, the league has already decided: they go
-  quick **85% of the time**, and genuine hold-for-last-shot possessions are
+  quick **84% of the time**, and genuine hold-for-last-shot possessions are
   nearly extinct (24 in a full season). The quick group really does get the
   extra possession (1.1 vs 0.2 later possessions). If anyone in the room
   argues for holding, the strongest data point is that almost nobody does.
