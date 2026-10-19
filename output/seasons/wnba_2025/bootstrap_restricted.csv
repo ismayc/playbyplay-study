@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+points_diff_restricted_20_45s,0.0635807745413901,-0.22237044794905295,0.3428526812131916,4000,469,227

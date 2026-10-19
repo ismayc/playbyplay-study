@@ -9,14 +9,20 @@ events by actionNumber as TEXT ("100" before "2"), scrambling the score
 forward-fill and corrupting every window score — the class of bug an
 independent second implementation surfaces immediately.
 
-Run:  python python/04_reconcile.py
+Run:  python python/04_reconcile.py                          NBA 2023-24
+      python python/04_reconcile.py --league wnba --season 2025
+      python python/04_reconcile.py --all                    every league-season
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
 import polars as pl
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import seasons  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output"
@@ -68,6 +74,13 @@ def compare_table(py_name: str, r_name: str, keys: list[str],
 
 
 def compare_bootstrap(py_name: str, r_name: str) -> tuple[bool, str]:
+    have_py, have_r = (OUT / py_name).exists(), (OUT / r_name).exists()
+    if not have_py and not have_r:
+        # both languages skip the restricted sensitivity when a group has
+        # 30 or fewer team-periods; agreeing to skip it is still agreement
+        return True, "not computed by either (a group has <= 30 team-periods)"
+    if have_py != have_r:
+        return False, f"only {'python' if have_py else 'R'} wrote it"
     py = pl.read_csv(OUT / py_name).row(0, named=True)
     r = pl.read_csv(OUT / r_name).row(0, named=True)
     overlap = (py["ci_lo"] <= r["ci_hi"]) and (r["ci_lo"] <= py["ci_hi"])
@@ -79,6 +92,63 @@ def compare_bootstrap(py_name: str, r_name: str) -> tuple[bool, str]:
 
 
 def main() -> int:
+    global OUT
+    ap = argparse.ArgumentParser()
+    seasons.add_args(ap)
+    ap.add_argument("--all", action="store_true",
+                    help="reconcile every league-season in seasons.SEASONS")
+    ap.add_argument("--pooled", action="store_true",
+                    help="also compare the pooled per-league bootstraps "
+                         "(09_seasons.py vs R/09_pooled.R)")
+    args = ap.parse_args()
+    targets = seasons.SEASONS if args.all else [(args.league, args.season)]
+
+    all_ok = True
+    if args.pooled:
+        all_ok &= reconcile_pooled()
+        print()
+    for league, season in targets:
+        OUT = seasons.out_dir(league, season)
+        if not (OUT / "team_period_windows.csv").exists():
+            # loud, not skipped: --all must cover every season it names
+            print(f"FAIL  {seasons.label(league, season)}: no outputs in {OUT}")
+            all_ok = False
+            continue
+        print(f"=== {seasons.label(league, season)}")
+        all_ok &= reconcile_one()
+        print()
+
+    print("ALL CHECKS PASS" if all_ok else "MISMATCHES FOUND")
+    return 0 if all_ok else 1
+
+
+def reconcile_pooled() -> bool:
+    """Pooled window bootstraps: Python vs R, by league and quantity."""
+    root = seasons.ROOT / "output"
+    py = pl.read_csv(root / "seasons_pooled.csv").filter(
+        pl.col("quantity") != "decision_quick_minus_hold")  # python-only layer
+    r = pl.read_csv(root / "seasons_pooled_r.csv")
+    merged = py.join(r, on=["league", "quantity"], how="full", suffix="_r", coalesce=True)
+    print("=== pooled per league (different RNGs; intervals compared for overlap)")
+    if merged.height != py.height or py.height != r.height:
+        print(f"  FAIL  row counts differ: py={py.height} r={r.height}")
+        return False
+    ok_all = True
+    for row in merged.iter_rows(named=True):
+        overlap = row["ci_lo"] <= row["ci_hi_r"] and row["ci_lo_r"] <= row["ci_hi"]
+        same_n = (row["n_treated"] == row["n_treated_r"]
+                  and row["n_control"] == row["n_control_r"])
+        same_est = abs(row["estimate"] - row["estimate_r"]) <= TOL
+        ok = overlap and same_n and same_est
+        ok_all &= ok
+        print(f"  {'PASS' if ok else 'FAIL'}  {row['league']:4s} {row['quantity']:15s} "
+              f"py {row['estimate']:+.3f} [{row['ci_lo']:+.3f},{row['ci_hi']:+.3f}] | "
+              f"r {row['estimate_r']:+.3f} [{row['ci_lo_r']:+.3f},{row['ci_hi_r']:+.3f}]"
+              + ("" if same_n else " | group sizes differ"))
+    return ok_all
+
+
+def reconcile_one() -> bool:
     print(f"Reconciling R and Python implementations (tolerance {TOL:g})\n")
     all_ok = True
 
@@ -92,9 +162,7 @@ def main() -> int:
         ok, msg = compare_bootstrap(py_name, r_name)
         all_ok &= ok
         print(f"  {'PASS' if ok else 'FAIL'}  {py_name:32s} {msg}")
-
-    print("\n" + ("ALL CHECKS PASS" if all_ok else "MISMATCHES FOUND"))
-    return 0 if all_ok else 1
+    return all_ok
 
 
 if __name__ == "__main__":

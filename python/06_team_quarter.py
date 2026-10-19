@@ -12,34 +12,41 @@ to team identities from the raw play-by-play:
      excluded from the study by design because endgame strategy changes
      everything), plus the own- and net-points outcomes per quarter.
 
-Gates: the join must cover every window with exactly 30 teams; totals and
-the league-wide 2-for-1 rate must reproduce the committed table.
+Gates: the join must cover every window with exactly the league-season's
+team count (seasons.N_TEAMS: 30 NBA, 12-15 WNBA); totals and the league-wide
+2-for-1 rate must reproduce the committed table.
 
-Run:  python python/06_team_quarter.py           full build
+Run:  python python/06_team_quarter.py           full build (NBA 2023-24)
       python python/06_team_quarter.py --check   offline gate replay
+      python python/06_team_quarter.py --league wnba --season 2025 [--check]
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
 import polars as pl
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import seasons  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = ROOT / "data" / "raw_pbp"
 OUT = ROOT / "output"
 FIG = ROOT / "figures"
+LEAGUE, SEASON = seasons.ORIGINAL
 
 
 def game_team_map() -> pl.DataFrame:
     """gameId + location (h/v) -> teamTricode, from the raw events."""
-    df = pl.scan_parquet(sorted(RAW_DIR.glob("*.parquet"))).select(
+    df = pl.scan_parquet(seasons.raw_files(LEAGUE, SEASON)).select(
         "gameId", "teamTricode", "location").filter(
         pl.col("teamTricode") != "").unique().collect()
     return df.with_columns(pl.col("gameId").cast(pl.Int64))
 
 
 def build() -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
+    n_teams = seasons.N_TEAMS[(LEAGUE, SEASON)]
     windows = pl.read_csv(OUT / "team_period_windows.csv")
     joined = windows.join(game_team_map(), on=["gameId", "location"],
                           how="left")
@@ -69,8 +76,8 @@ def build() -> tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame]:
         {"check": "every window joined to a team (nulls)",
          "value": float(joined["teamTricode"].is_null().sum()),
          "threshold": 0.0},
-        {"check": "exactly 30 teams",
-         "value": float(abs(team.height - 30)), "threshold": 0.0},
+        {"check": f"exactly {n_teams} teams",
+         "value": float(abs(team.height - n_teams)), "threshold": 0.0},
         {"check": "team windows sum to the committed window count",
          "value": float(abs(int(team["windows"].sum()) - windows.height)),
          "threshold": 0.0},
@@ -100,7 +107,8 @@ def figures(team: pl.DataFrame, quarter: pl.DataFrame) -> None:
                   annotation_position="bottom right")
     fig.update_layout(
         title="Who hunts the 2-for-1: share of final-minute windows with a "
-              "32+ second first shot, 2023-24",
+              "32+ second first shot, "
+              + (SEASON if LEAGUE == "nba" else seasons.label(LEAGUE, SEASON)),
         xaxis_title="2-for-1 rate", yaxis_title="",
         xaxis_tickformat=".0%", height=640,
         template="plotly_white",
@@ -137,9 +145,18 @@ def figures(team: pl.DataFrame, quarter: pl.DataFrame) -> None:
 
 
 def main(argv: list[str]) -> int:
+    global OUT, FIG, LEAGUE, SEASON
+    ap = argparse.ArgumentParser()
+    seasons.add_args(ap)
+    ap.add_argument("--check", action="store_true")
+    args = ap.parse_args(argv)
+    LEAGUE, SEASON = args.league, args.season
+    OUT = seasons.out_dir(LEAGUE, SEASON)
+    FIG = seasons.fig_dir(LEAGUE, SEASON)
+    FIG.mkdir(parents=True, exist_ok=True)
     team, quarter, checks = build()
 
-    if "--check" in argv:
+    if args.check:
         committed = pl.read_csv(OUT / "team_2for1.csv")
         drift = (team.sort("teamTricode")["rate"]
                  - committed.sort("teamTricode")["rate"]).abs().max()

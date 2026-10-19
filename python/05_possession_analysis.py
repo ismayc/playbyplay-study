@@ -28,23 +28,37 @@ place of the old one. The decision-team framing avoids the boundary entirely.
 Also computed: how often the original first-shot proxy misread the choice,
 and the possession-count mechanism (quick should yield ~1 extra possession).
 
-Input : ../lineup-valuation-study/data/pbp_bulk/pbpstats_2023.csv
-        data/raw_pbp/*.parquet   (V3 events: scores and the tricode->h/v map)
-Output: output/decision_windows.csv, output/decision_summary.csv
-        output/bootstrap_decision_quick_vs_hold.csv
-        output/proxy_vs_possession.csv
+Two possession sources, selected by --source:
+  archive  the shufinskiy/nba_data pbpstats bulk archive (seasons.ARCHIVE);
+           NBA 2023-24's published numbers come from this source.
+  built    tables built here with the pbpstats library
+           (07_build_possessions.py), for every league-season, including the
+           two the archive lacks (NBA 2025-26, WNBA 2026).
+08_reconcile_possessions.py runs both on the seasons both cover.
 
-Run: python python/05_possession_analysis.py
+Input : seasons.ARCHIVE[...] or data/possessions/<tag>.parquet
+        data/raw_pbp/<prefix>*.parquet  (V3 events: scores, team h/v map)
+Output: <out>/decision_windows.csv, <out>/decision_summary.csv,
+        <out>/bootstrap_decision_quick_vs_hold.csv, <out>/proxy_vs_possession.csv
+        where <out> is seasons.out_dir(...) for the archive source and
+        seasons.out_dir(...)/built for the built source
+
+Run: python python/05_possession_analysis.py [--league wnba --season 2025]
+     [--source built]
 """
 from __future__ import annotations
 
+import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
 import polars as pl
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import seasons  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
-BULK = ROOT.parent / "lineup-valuation-study" / "data" / "pbp_bulk" / "pbpstats_2023.csv"
 OUT = ROOT / "output"
 
 DECISION_T = 40.0   # the ball-holder at this mark faces the 2-for-1 decision
@@ -58,13 +72,40 @@ def mmss(col: str) -> pl.Expr:
             + parts.list.get(1).cast(pl.Float64))
 
 
-def load_possessions() -> pl.DataFrame:
-    raw = pl.read_csv(BULK, infer_schema_length=10000)
+def load_possessions(league: str = "nba", season: str = "2023-24",
+                     source: str = "archive") -> pl.DataFrame:
+    """One row per possession: game_id, PERIOD, start_secs, end_secs,
+    offense (tricode), TURNOVERS, and `used` (the possession produced a
+    field-goal attempt, a free-throw trip, or a turnover), from either source.
+
+    `used` is what makes the later-possessions count comparable across
+    sources: the two draw end-of-period boundaries differently (pbpstats keeps
+    a final possession in which nothing happens before the buzzer, and the
+    archive drops it), but both record every possession that used the ball."""
+    if source == "built":
+        built = pl.read_parquet(seasons.possessions_file(league, season))
+        tricode = team_tricodes(league, season)
+        out = built.join(tricode, left_on=["game_id", "offense_team_id"],
+                         right_on=["gameId", "teamId"], how="left")
+        assert out["offense"].null_count() == 0, "offense team id without a tricode"
+        return (out.with_columns(used=(pl.col("FGA") > 0) | (pl.col("FTA") > 0)
+                                 | (pl.col("TURNOVERS") > 0))
+                .drop("offense_team_id"))
+
+    bulk = seasons.ARCHIVE.get((league, season))
+    if bulk is None:
+        raise SystemExit(f"the archive has no {seasons.label(league, season)}; "
+                         f"use --source built")
+    raw = pl.read_csv(bulk, infer_schema_length=10000)
+    # possession-level stats repeat on every event row of a possession
     poss = (raw.unique(subset=["GAMEID", "PERIOD", "STARTTIME", "ENDTIME", "OPPONENT"])
             .with_columns(
                 start_secs=mmss("STARTTIME"),
                 end_secs=mmss("ENDTIME"),
                 game_id=pl.col("GAMEID").cast(pl.Int64),
+                used=((pl.col("FG2A") + pl.col("FG3A")) > 0) | (pl.col("TURNOVERS") > 0)
+                     | (pl.col("SHOOTINGFOULSDRAWN") > 0)
+                     | (pl.col("NONSHOOTINGFOULSTHATRESULTEDINFTS") > 0),
             ))
     teams = poss.group_by("game_id").agg(tricodes=pl.col("OPPONENT").unique().sort())
     assert (teams["tricodes"].list.len() == 2).all()
@@ -76,9 +117,21 @@ def load_possessions() -> pl.DataFrame:
             .drop("tricodes"))
 
 
-def v3_events() -> pl.DataFrame:
-    """V3 events with numeric-sorted forward-filled scores (the 02 fix applies)."""
-    files = sorted((ROOT / "data" / "raw_pbp").glob("*.parquet"))
+def team_tricodes(league: str, season: str) -> pl.DataFrame:
+    """gameId + teamId -> tricode (as `offense`), from the V3 events."""
+    return (pl.scan_parquet(seasons.raw_files(league, season))
+            .filter(pl.col("teamTricode") != "")
+            .select(gameId=pl.col("gameId").cast(pl.Int64),
+                    teamId=pl.col("teamId").cast(pl.Int64),
+                    offense=pl.col("teamTricode"))
+            .unique().collect())
+
+
+def v3_events(league: str = "nba", season: str = "2023-24") -> pl.DataFrame:
+    """V3 events in game-clock order with forward-filled scores (both 02 fixes
+    apply: numeric actionNumber, and clock order so late-inserted events do
+    not carry a later score into the 40-second mark)."""
+    files = seasons.raw_files(league, season)
     mins = pl.col("clock").str.extract(r"PT(\d+)M", 1).cast(pl.Float64)
     secs = pl.col("clock").str.extract(r"M([\d.]+)S", 1).cast(pl.Float64)
     df = (pl.scan_parquet(files)
@@ -93,7 +146,8 @@ def v3_events() -> pl.DataFrame:
               score_a=pl.when(pl.col("scoreAway") == "").then(None)
               .otherwise(pl.col("scoreAway")).cast(pl.Float64, strict=False),
           )
-          .sort(["gameId", "period", "actionNumber"])
+          .sort(["gameId", "period", "secs_left", "actionNumber"],
+                descending=[False, False, True, False], nulls_last=True)
           .with_columns(
               score_h=pl.col("score_h").fill_null(strategy="forward").over("gameId"),
               score_a=pl.col("score_a").fill_null(strategy="forward").over("gameId"),
@@ -106,9 +160,20 @@ def v3_events() -> pl.DataFrame:
 
 
 def main() -> int:
-    poss = load_possessions()
-    print(f"{poss.height:,} possessions, {poss['game_id'].n_unique()} games "
-          f"(pbpstats archive; 2 of 1,230 games absent upstream)")
+    global OUT
+    ap = argparse.ArgumentParser()
+    seasons.add_args(ap)
+    ap.add_argument("--source", choices=["archive", "built"], default="archive")
+    args = ap.parse_args()
+    lg, ssn = args.league, args.season
+    windows_dir = seasons.out_dir(lg, ssn)
+    OUT = windows_dir / "built" if args.source == "built" else windows_dir
+    OUT.mkdir(parents=True, exist_ok=True)
+
+    poss = load_possessions(lg, ssn, args.source)
+    n_games = len(seasons.raw_files(lg, ssn))
+    print(f"{poss.height:,} possessions, {poss['game_id'].n_unique()} of {n_games:,} "
+          f"games ({seasons.label(lg, ssn)}, {args.source} source)")
 
     # ---- decision team: possession active at the 40s mark ------------------
     decision = (poss.filter(pl.col("PERIOD").is_in([1, 2, 3])
@@ -126,9 +191,11 @@ def main() -> int:
     good = per_period.filter(pl.col("len") == 1).select("game_id", "PERIOD")
     decision = decision.join(good, on=["game_id", "PERIOD"], how="inner")
 
-    # mechanism: possessions the decision team starts AFTER the mark
+    # mechanism: possessions the decision team starts AFTER the mark and
+    # uses (a shot, a free-throw trip, or a turnover; see load_possessions)
     later = (poss.filter(pl.col("PERIOD").is_in([1, 2, 3])
-                         & (pl.col("start_secs") < DECISION_T))
+                         & (pl.col("start_secs") < DECISION_T)
+                         & pl.col("used"))
              .group_by("game_id", "PERIOD", "offense")
              .agg(n_later_poss=pl.len()))
     decision = decision.join(
@@ -136,7 +203,7 @@ def main() -> int:
     ).with_columns(pl.col("n_later_poss").fill_null(0))
 
     # ---- outcome: net points from the mark, via V3 scores ------------------
-    events = v3_events()
+    events = v3_events(lg, ssn)
     per = events.filter(pl.col("period").is_in([1, 2, 3]))
     start = (per.filter(pl.col("secs_left") > DECISION_T)
              .group_by("gameId", "period")
@@ -147,7 +214,7 @@ def main() -> int:
              .with_columns(h_net=(pl.col("h1") - pl.col("h0")) - (pl.col("a1") - pl.col("a0")))
              .with_columns(gameId=pl.col("gameId").cast(pl.Int64)))
 
-    side_map = (pl.scan_parquet(sorted((ROOT / "data" / "raw_pbp").glob("*.parquet")))
+    side_map = (pl.scan_parquet(seasons.raw_files(lg, ssn))
                 .filter(pl.col("location").is_in(["h", "v"]) & (pl.col("teamTricode") != ""))
                 .select("gameId", "teamTricode", "location").unique().collect()
                 .with_columns(gameId=pl.col("gameId").cast(pl.Int64)))
@@ -158,7 +225,10 @@ def main() -> int:
               .join(marks, left_on=["game_id", "PERIOD"],
                     right_on=["gameId", "period"], how="inner")
               .with_columns(net=pl.when(pl.col("location") == "h")
-                            .then(pl.col("h_net")).otherwise(-pl.col("h_net"))))
+                            .then(pl.col("h_net")).otherwise(-pl.col("h_net")))
+              # joins return rows in run-dependent order and the bootstrap
+              # draws by position; sort so every run reproduces (see 02)
+              .sort(["game_id", "PERIOD"]))
     print(f"{merged.height:,} decision team-periods with outcomes")
     merged.select("game_id", "PERIOD", "offense", "behavior", "start_secs",
                   "end_secs", "n_later_poss", "net").write_csv(OUT / "decision_windows.csv")
@@ -193,7 +263,7 @@ def main() -> int:
                  ).write_csv(OUT / "bootstrap_decision_quick_vs_hold.csv")
 
     # ---- how often did the first-shot proxy misread the choice? ------------
-    windows = (pl.read_csv(OUT / "team_period_windows.csv")
+    windows = (pl.read_csv(windows_dir / "team_period_windows.csv")
                .with_columns(gameId=pl.col("gameId").cast(pl.Int64)))
     pv = (merged.join(windows, left_on=["game_id", "PERIOD", "location"],
                       right_on=["gameId", "period", "location"], how="inner")

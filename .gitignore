@@ -3,3 +3,11 @@ __pycache__/
 .venv/
 .DS_Store
 .~lock.*#
+
+# pbpstats live JSON cache (~2 GB); the built tables in data/possessions/ are committed
+data/pbpstats_live/
+# Bulk pbpstats archives: compressed originals committed; tar xf regenerates
+data/pbp_bulk/*.csv
+data/pbpstats_live_sanitized/
+# per-season diagnostic figures (seasons.fig_dir); no page links them
+output/seasons/*/figures/

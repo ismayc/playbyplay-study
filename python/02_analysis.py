@@ -31,25 +31,32 @@ hold the ball then is not random. Section "Findings" reports the association and
 does not claim a causal effect. The mechanism checks (shot quality, shot count) are
 what carry the argument.
 
-Inputs : data/raw_pbp/*.parquet   (from 01_harvest_pbp.py)
-Outputs: output/*.csv, figures/*.png + *.html
+The WNBA runs the same design unchanged: four 10-minute quarters, but the same
+24-second shot clock, so the 60-second window and 32-second threshold transfer.
 
-Run: python python/02_analysis.py
+Inputs : data/raw_pbp/<league-season prefix>*.parquet   (from 01_harvest_pbp.py)
+Outputs: output/*.csv, figures/*.png + *.html for NBA 2023-24;
+         output/seasons/<tag>/ (figures in its gitignored figures/) for every other
+         league-season (see seasons.py)
+
+Run: python python/02_analysis.py [--league wnba --season 2025]
 """
 from __future__ import annotations
 
+import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
 import plotly.graph_objects as go
 import polars as pl
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import seasons  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = ROOT / "data" / "raw_pbp"
 OUT = ROOT / "output"
 FIG = ROOT / "figures"
-OUT.mkdir(exist_ok=True)
-FIG.mkdir(exist_ok=True)
 
 BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 INK, INK2, MUTED = "#0b0b0b", "#52514e", "#898781"
@@ -83,13 +90,18 @@ def save(fig: go.Figure, stem: str) -> None:
     fig.write_html(FIG / f"{stem}.html", include_plotlyjs="cdn")
 
 
-def load_events() -> pl.DataFrame:
-    files = sorted(RAW_DIR.glob("*.parquet"))
-    if not files:
-        raise SystemExit(f"No play-by-play in {RAW_DIR}. Run 01_harvest_pbp.py first.")
+def load_events(league: str = "nba", season: str = "2023-24") -> pl.DataFrame:
+    # diagonal: the feed adds or drops columns between seasons; every column
+    # this script reads is present in all of them
+    df = pl.concat([pl.read_parquet(f) for f in seasons.raw_files(league, season)],
+                   how="diagonal")
+    return prepare_events(df)
 
-    df = pl.read_parquet(files)
 
+def prepare_events(df: pl.DataFrame) -> pl.DataFrame:
+    """Raw V3 rows (all text) -> typed, ordered events with running scores.
+    Separate from load_events so 01b_import_v3_archive.py can run the same
+    preparation on archive rows."""
     # "PT11M42.00S" -> 702.0 seconds remaining in the period.
     mins = pl.col("clock").str.extract(r"PT(\d+)M", 1).cast(pl.Float64)
     secs = pl.col("clock").str.extract(r"M([\d.]+)S", 1).cast(pl.Float64)
@@ -109,11 +121,21 @@ def load_events() -> pl.DataFrame:
                   .otherwise(pl.col("scoreHome")).cast(pl.Float64, strict=False),
         score_a=pl.when(pl.col("scoreAway") == "").then(None)
                   .otherwise(pl.col("scoreAway")).cast(pl.Float64, strict=False),
-    ).sort(["gameId", "period", "actionNumber"])
+    # GAME-CLOCK order, actionNumber only to break ties. The feed inserts late
+    # events (logged after the fact) with a high actionNumber but an early
+    # clock: in 0022300002 events 244-246 sit in period 1 at 5:05 left, after
+    # the period-end event. Ordered by actionNumber, those strays became "the
+    # last event with more than 60s left", carried the period-END score, and
+    # zeroed the window: 15% of 2023-24 team-periods (1,105 of 7,380) had
+    # wrong window points until 2026-10-19, when the NBA liveData feed
+    # disagreed (10_check_sources.py). Clock order agrees on 99.93%.
+    ).sort(["gameId", "period", "secs_left", "actionNumber"],
+           descending=[False, False, True, False], nulls_last=True)
 
     # Scores are only stamped on scoring events; carry them forward so every event
     # knows the current score. Periods start from the running game score, so the
-    # fill must run across the whole game, not within period.
+    # fill must run across the whole game, not within period. The fill runs in
+    # clock order, so a late-inserted event inherits the score of its game time.
     df = df.with_columns(
         score_h=pl.col("score_h").fill_null(strategy="forward").over("gameId"),
         score_a=pl.col("score_a").fill_null(strategy="forward").over("gameId"),
@@ -160,14 +182,10 @@ def window_shots(df: pl.DataFrame) -> pl.DataFrame:
                  fg3m=(pl.col("made") & (pl.col("shot_value") == 3)).sum()))
 
 
-def main() -> int:
-    df = load_events()
-    n_games = df["gameId"].n_unique()
-    print(f"Loaded {df.height:,} events from {n_games:,} games")
-
+def team_period_table(df: pl.DataFrame) -> pl.DataFrame:
+    """Per team-period window outcomes: the table every finding is built on."""
     shots = window_shots(df)
     pts = window_points(df)
-
     team_periods = (shots.join(pts, on=["gameId", "period", "location"], how="inner")
                     .with_columns(
                         two_for_one=pl.col("first_fga_sec") >= TWO_FOR_ONE_SEC,
@@ -186,6 +204,29 @@ def main() -> int:
                     .join(opp, on=["gameId", "period", "location"], how="left")
                     .with_columns(net=pl.col("points") - pl.col("opp_points")))
     assert team_periods["opp_points"].null_count() == 0, "opponent points join incomplete"
+    # polars group_by and join return rows in a different order on every run,
+    # and the bootstraps below draw from rows by position, so an unsorted
+    # table moved every published interval by up to 0.009 from run to run
+    # (found 2026-10-19). Sorting on the keys makes each run reproduce.
+    return team_periods.sort(["gameId", "period", "location"])
+
+
+def main() -> int:
+    global OUT, FIG
+    ap = argparse.ArgumentParser()
+    seasons.add_args(ap)
+    args = ap.parse_args()
+    OUT = seasons.out_dir(args.league, args.season)
+    FIG = seasons.fig_dir(args.league, args.season)
+    OUT.mkdir(parents=True, exist_ok=True)
+    FIG.mkdir(parents=True, exist_ok=True)
+
+    df = load_events(args.league, args.season)
+    n_games = df["gameId"].n_unique()
+    print(f"Loaded {df.height:,} events from {n_games:,} games "
+          f"({seasons.label(args.league, args.season)})")
+
+    team_periods = team_period_table(df)
     team_periods.write_csv(OUT / "team_period_windows.csv")
     print(f"{team_periods.height:,} team-periods with at least one shot in the "
           f"final {WINDOW_SEC:.0f}s of Q1-Q3")
@@ -292,7 +333,9 @@ def main() -> int:
     fig = go.Figure(layout=base_layout(
         "Teams really do hunt the 2-for-1",
         f"When a team takes its first shot in the last 60s of Q1-Q3 "
-        f"({n_games:,} games, 2023-24)",
+        f"({n_games:,} games, "
+        + (args.season if args.league == "nba" else seasons.label(args.league, args.season))
+        + ")",
         "Seconds left when the first shot went up", "Team-periods"))
     fig.add_trace(go.Bar(marker_line=dict(color='white', width=1), x=hist["bucket"].to_list(), y=hist["n"].to_list(),
                          marker=dict(color=BLUE, line=dict(width=0)),

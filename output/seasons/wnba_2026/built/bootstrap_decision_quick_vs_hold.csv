@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+decision_quick_minus_hold_net,0.31460595934280144,-0.3474554441659704,1.0014950570871626,4000,756,19

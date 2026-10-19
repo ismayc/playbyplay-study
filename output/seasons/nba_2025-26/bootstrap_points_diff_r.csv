@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+points_diff_2for1_minus_hold,0.7405516275309298,0.6447077769257371,0.8374532240392865,4000,5610,1583

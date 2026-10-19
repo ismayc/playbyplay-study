@@ -7,6 +7,13 @@ parse_clock_secs <- function(clock) {
     as.numeric(stringr::str_match(clock, "M([\\d.]+)S")[, 2])
 }
 
+#' Game-ID prefix of a league-season: ("nba", "2025-26") -> "00225",
+#' ("wnba", "2026") -> "10226". Mirrors python/seasons.py's prefix().
+season_prefix <- function(league, season) {
+  lead <- c(nba = "002", wnba = "102")[[league]]
+  paste0(lead, substr(season, 3, 4))
+}
+
 #' Bootstrap the difference in mean `outcome` between two-for-one and held
 #' team-periods. `frame` needs logical `two_for_one` and the outcome column.
 boot_diff <- function(frame, outcome, seed, reps = 4000) {

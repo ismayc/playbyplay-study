@@ -18,7 +18,12 @@
 #          output/bootstrap_points_diff_r.csv, output/bootstrap_net_diff_r.csv
 #          output/bootstrap_restricted_r.csv,  output/bootstrap_net_restricted_r.csv
 #
-# Run:  Rscript R/02_analysis.R
+# Run:  Rscript R/02_analysis.R [league season]      e.g.  Rscript R/02_analysis.R wnba 2025
+#
+# NBA 2023-24 (the default) writes to output/; every other league-season to
+# output/seasons/<league>_<season>/, matching python/seasons.py. Games are
+# selected by game-ID prefix ("00224" = NBA 2024-25, "10225" = WNBA 2025)
+# because every league-season shares one raw_pbp cache.
 
 suppressPackageStartupMessages({
   library(nanoparquet)
@@ -34,15 +39,25 @@ if (is.na(ROOT) || !dir.exists(ROOT)) ROOT <- normalizePath(".")
 
 RAW_DIR <- file.path(ROOT, "data", "raw_pbp")
 source(file.path(ROOT, "R", "functions.R"))  # pure functions, unit-tested
-OUT_DIR <- file.path(ROOT, "output")
+args <- commandArgs(trailingOnly = TRUE)
+LEAGUE <- if (length(args) >= 1) args[[1]] else "nba"
+SEASON <- if (length(args) >= 2) args[[2]] else "2023-24"
+PREFIX <- season_prefix(LEAGUE, SEASON)
+OUT_DIR <- if (LEAGUE == "nba" && SEASON == "2023-24") {
+  file.path(ROOT, "output")
+} else {
+  file.path(ROOT, "output", "seasons", paste0(LEAGUE, "_", SEASON))
+}
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 WINDOW_SEC <- 60
 TWO_FOR_ONE_SEC <- 32
 
 # ---- Load -------------------------------------------------------------------
-files <- sort(list.files(RAW_DIR, pattern = "\\.parquet$", full.names = TRUE))
-if (!length(files)) stop("No play-by-play in ", RAW_DIR, ". Run python/01_harvest_pbp.py first.")
+files <- sort(list.files(RAW_DIR, pattern = paste0("^", PREFIX, ".*\\.parquet$"),
+                         full.names = TRUE))
+if (!length(files)) stop("No play-by-play for ", LEAGUE, " ", SEASON, " in ", RAW_DIR,
+                         ". Run python/01_harvest_pbp.py first.")
 
 message("Reading ", length(files), " game files...")
 events <- map_dfr(files, read_parquet)
@@ -60,7 +75,13 @@ events <- events %>%
     score_h = suppressWarnings(as.numeric(if_else(scoreHome == "", NA_character_, scoreHome))),
     score_a = suppressWarnings(as.numeric(if_else(scoreAway == "", NA_character_, scoreAway)))
   ) %>%
-  arrange(gameId, period, action_num) %>%
+  # Game-clock order, action number only to break ties: the feed inserts
+  # late events with a high action number but an early clock (0022300002
+  # has three in period 1 at 5:05, after the period-end event), and in
+  # action-number order they carried the period-END score into the window
+  # start. Fixed 2026-10-19 after the NBA liveData feed disagreed on 15% of
+  # 2023-24 windows; see python/02_analysis.py and 10_check_sources.py.
+  arrange(gameId, period, desc(secs_left), action_num) %>%
   # Scores are only stamped on scoring events; carry forward across the whole
   # game (periods start from the running total, so not within period).
   group_by(gameId) %>%

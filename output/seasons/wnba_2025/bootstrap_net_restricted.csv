@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+net_diff_restricted_20_45s,-0.31669218413909056,-0.6961510102101199,0.06762044090435176,4000,469,227

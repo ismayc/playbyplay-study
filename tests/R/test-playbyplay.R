@@ -8,6 +8,14 @@ test_that("parse_clock_secs converts the PT..M..S format", {
   expect_true(is.na(parse_clock_secs("garbage")))
 })
 
+test_that("season_prefix matches the game-ID prefixes in python/seasons.py", {
+  expect_equal(season_prefix("nba", "2023-24"), "00223")
+  expect_equal(season_prefix("nba", "2025-26"), "00225")
+  expect_equal(season_prefix("wnba", "2024"), "10224")
+  expect_equal(season_prefix("wnba", "2026"), "10226")
+  expect_error(season_prefix("gleague", "2024"))
+})
+
 test_that("boot_diff estimates the group mean difference with a sane CI", {
   frame <- tibble::tibble(
     two_for_one = rep(c(TRUE, FALSE), each = 200),

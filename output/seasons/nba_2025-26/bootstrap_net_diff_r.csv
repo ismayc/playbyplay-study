@@ -1,0 +1,2 @@
+quantity,estimate,ci_lo,ci_hi,reps,n_treated,n_control
+net_diff_2for1_minus_hold,0.8357365412138529,0.6881692036488392,0.9828386415152934,4000,5610,1583

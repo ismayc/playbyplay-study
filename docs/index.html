@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The 2-for-1 is real, coaches actually do it, and the payoff is smaller than it looks</title>
+<title>The 2-for-1 is real, coaches actually do it, and it pays</title>
 <meta name="description" content="Reconciled, validated basketball analytics on public data: part of the basketball-data-science family.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏀</text></svg>">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Basketball Data Science">
-<meta property="og:title" content="The 2-for-1 is real, coaches actually do it, and the payoff is smaller than it looks">
+<meta property="og:title" content="The 2-for-1 is real, coaches actually do it, and it pays">
 <meta property="og:description" content="Reconciled, validated basketball analytics on public data: part of the basketball-data-science family.">
 <meta property="og:url" content="https://ismayc.github.io/playbyplay-study/">
 <meta property="og:image" content="https://ismayc.github.io/basketball-data-science/og-image.png">
@@ -224,30 +224,31 @@ html.reveal .is-in { opacity: 1; transform: none; }
   <a href="https://github.com/ismayc/playbyplay-study">Code on GitHub</a>
   <button class="themebtn" type="button" aria-label="Toggle color theme">◐</button>
 </div></header>
-<nav class="sectionnav" aria-label="Sections"><div class="inner"><a href="#the-fingerprint">The fingerprint</a><a href="#the-payoff">The payoff</a><a href="#the-scouting-report">The scouting report</a><a href="#context-check">Context check</a><a href="#the-reconcile-gate">The reconcile gate</a><a href="#method-code-and-verification">Method</a></div></nav>
+<nav class="sectionnav" aria-label="Sections"><div class="inner"><a href="#the-fingerprint">The fingerprint</a><a href="#the-payoff">The payoff</a><a href="#the-scouting-report">The scouting report</a><a href="#context-check">Context check</a><a href="#three-seasons">Three seasons</a><a href="#the-wnba">The WNBA</a><a href="#the-correction">The correction</a><a href="#method-code-and-verification">Method</a></div></nav>
 <main>
-<div class="eyebrow">Full 2023-24 play-by-play</div>
-<h1>The <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is real, coaches actually do it, and the payoff is smaller than it looks</h1>
+<div class="eyebrow">Play-by-play, three NBA and three WNBA seasons</div>
+<h1>The <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is real, coaches actually do it, and it pays</h1>
 <p>With thirty-some seconds left in a quarter, a team with the ball faces a
 genuine strategic fork: shoot quickly and buy an extra possession before
 the buzzer, or hold for the last shot and deny the opponent any reply.
 Coaches disagree about this in public. A full season of play-by-play
 (all 1,230 games of 2023-24) lets us ask two separable questions: do teams
-actually play the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>, and does it pay?</p>
+actually play the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>, and does it pay? Two more NBA seasons and three
+WNBA seasons then test whether the answer holds.</p>
 <details class="terms"><summary>Terms used in this analysis</summary><ul><li><strong>2-for-1</strong>: Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.</li><li><strong>CI</strong>: Confidence interval.</li></ul></details>
 <div class="tiles">
 <div class="tile"><div class="label">First shot at 32+ seconds</div>
 <div class="value">78%</div>
-<div class="sub">Of 7,221 final-minute team-periods in quarters one through three.</div></div>
+<div class="sub">Of 7,221 final-minute team-periods in quarters one through three, 2023-24.</div></div>
 <div class="tile"><div class="label">Launch-rate spike at 31&ndash;33s</div>
 <div class="value">1.37&times;</div>
 <div class="sub">201 team-periods per second, versus 147 in the 36&ndash;40 second band.</div></div>
 <div class="tile"><div class="label">Own-points edge</div>
-<div class="value">+0.58</div>
-<div class="sub">Points per team-period over holding; on net points it shrinks to about +0.2.</div></div>
-<div class="tile"><div class="label">The reconcile gate</div>
-<div class="value">+0.36 &rarr; +0.58</div>
-<div class="sub">Naive versus corrected estimate after a text-sort bug was caught.</div></div>
+<div class="value">+0.78</div>
+<div class="sub">Points per team-period over holding; on net points, in the fairest comparison, about +0.2.</div></div>
+<div class="tile"><div class="label">Corrected October 19, 2026</div>
+<div class="value">15%</div>
+<div class="sub">Of 2023-24 windows had wrong points until an independent feed caught an ordering bug.</div></div>
 </div>
 
 <div class="eyebrow beat" id="the-fingerprint">The fingerprint</div>
@@ -266,21 +267,22 @@ except a decision rule.</p>
 <figure class="figure-card"><iframe src="figures/fig1_first_shot_timing.html" loading="lazy" style="height:516px" title="First shot timing"></iframe><figcaption>When the first shot of the final minute goes up. This figure is the behavioral fingerprint: the spike at 31–33 seconds is the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> threshold made visible, and no smooth basketball process puts it there. The discontinuity, not the 78% share, is the proof that teams deliberately play the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>.</figcaption></figure>
 <div class="eyebrow beat" id="the-payoff">The payoff</div>
 
-<h2>The extra possession is real. The edge is thinner than advertised.</h2>
+<h2>The extra possession is real, and so is the edge</h2>
 <p>So teams do it. Should they? Counting a team's own points, <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> windows
-produce +0.58 more points per team-period than holds (95% bootstrap <abbr data-tip="Confidence interval.">CI</abbr>
-[+0.48, +0.68]). The mechanism shows up exactly where it should, as
+produce +0.78 more points per team-period than holds (95% bootstrap <abbr data-tip="Confidence interval.">CI</abbr>
+[+0.68, +0.88]). The mechanism shows up exactly where it should, as
 roughly +0.94 extra field-goal attempts per window. The extra possession is
 real, not an accounting trick.</p>
 <p>But the case for holding the ball was never about your own points. It is
 that holding denies the opponent a reply. So the honest outcome is <strong>net</strong>
-points, and the honest comparison controls for the fact that better teams
-choose the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> more often. On net points, in the comparable-sample
-analysis, the edge shrinks to roughly +0.2 per opportunity and is not
-statistically distinguishable from zero. The decision still favors
-shooting early: you give up nothing, and the shot-quality cost is
-negligible. But the breathless version of the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> case does not
-survive its own accounting.</p>
+points, and the honest comparison controls for the fact that the team with
+the ball early is a different kind of team-period. On net points, in the
+comparable-sample analysis, the edge shrinks to +0.24 per opportunity
+(95% <abbr data-tip="Confidence interval.">CI</abbr> [+0.03, +0.44]): the opponent's reply claws back about half of the
+gain, but not all of it. Pooled over three NBA seasons that net edge is
++0.23 [+0.10, +0.35], clearly above zero. The decision favors shooting
+early: you give up nothing on shot quality, and you keep a real, if
+modest, edge after the opponent answers.</p>
 <figure class="figure-card"><iframe src="figures/fig2_efg_by_clock.html" loading="lazy" style="height:516px" title="Efg by clock"></iframe><figcaption>Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling <a href="https://ismayc.github.io/shot-quality-study/">shot-quality study</a> later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)</figcaption></figure>
 <div class="eyebrow beat" id="the-scouting-report">The scouting report</div>
 
@@ -303,19 +305,53 @@ The decision is driven by the clock, not the scoreboard or the stage of
 the game, at least through three quarters (the fourth is excluded by
 design, because endgame strategy changes everything).</p>
 <figure class="figure-card"><iframe src="figures/fig4_quarter_2for1.html" loading="lazy" style="height:356px" title="Quarter 2for1"></iframe><figcaption>Own points per window by quarter, <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> versus hold. Necessary because "does context change the answer?" is the first question a coach asks: the bars barely move across quarters, so the recommendation survives without a quarter-by-quarter carve-out.</figcaption></figure>
-<div class="eyebrow beat" id="the-reconcile-gate">The reconcile gate</div>
+<div class="eyebrow beat" id="three-seasons">Three seasons</div>
 
-<h2>These numbers were wrong once. That is why you can trust them.</h2>
-<p>One methodological note belongs in the story rather than a footnote,
-because it explains why these numbers can be trusted. The first version
-of this analysis silently sorted play-by-play event numbers as text,
-putting "100" before "2". That corrupted every scoreboard-dependent
-number downstream.
-The bug was caught by this family's standing rule that every analysis is
-implemented twice, in R and Python, and reconciled to numeric tolerance
-before findings are written. The gap between the naive and corrected
-numbers (+0.36 → +0.58) is a permanent reminder of what the reconcile gate
-is for.</p>
+<h2>The habit has stopped spreading, and the holdouts came back</h2>
+<p>One season could not say whether the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> was still taking over. Three
+can. Looking only at the team that has the ball at the 40-second mark, the
+share that goes quick sits at 84.5%, 82.4% and 83.0% across 2023-24 to
+2025-26: flat, not rising. Holding for the last shot, nearly extinct at 24
+team-periods in 2023-24, ran 50 and 48 in the next two seasons. The
+bunching at the 32-second threshold also softened, from 1.37× to 1.19× the
+rate in the 36–40 second band. The play is standard, but the league has not
+finished converging on it.</p>
+<figure class="figure-card"><iframe src="figures/fig5_quick_share_by_season.html" loading="lazy" style="height:416px" title="Quick share by season"></iframe><figcaption>Share of <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> decisions that went quick, by league-season, with the number of holds on each bar. Necessary because "everyone already does it" was a one-season claim: the NBA bars are flat, the holds doubled after 2023-24, and the WNBA bars sit lower.</figcaption></figure>
+<div class="eyebrow beat" id="the-wnba">The WNBA</div>
+
+<h2>The WNBA plays it less, and less on schedule</h2>
+<p>The WNBA plays 10-minute quarters with the same 24-second shot clock, so
+the same 60-second window and 32-second threshold apply. WNBA teams with
+the ball at the mark go quick 76% to 78% of the time, below the NBA's
+rate, and they do not time the first shot to the threshold at all: the
+31–33 second band never reaches even the rate of the 36–40 second band.
+The hope for the replication was a larger group of teams that hold, which
+would make the comparison better powered. Holds are about twice as
+common as in the NBA, but that is still only 16 to 19 a season.</p>
+<p>Does it pay there? The possession-level comparison says yes: quick minus
+hold pools to +0.71 net points over 2024-2026 (95% <abbr data-tip="Confidence interval.">CI</abbr> [+0.25, +1.18]). The
+shot-timing comparison restricted to first shots at 20–45 seconds does
+not: −0.13 [−0.36, +0.11]. The possession design is the more direct of the
+two, because it compares only teams that had the ball at the mark, so it
+carries the conclusion, but the disagreement is real and worth stating.</p>
+<figure class="figure-card"><iframe src="figures/fig6_restricted_net_by_season.html" loading="lazy" style="height:412px" title="Restricted net by season"></iframe><figcaption>The restricted net-points gap with its 95% interval for every league-season and pooled by league. Necessary because the one-season question was whether this interval clears zero: pooled, the NBA's does, and the WNBA's does not on this design.</figcaption></figure>
+<div class="eyebrow beat" id="the-correction">The correction</div>
+
+<h2>These numbers were wrong twice. Each time, a check caught it.</h2>
+<p>The first version of this analysis silently sorted play-by-play event
+numbers as text, putting "100" before "2". The family's rule that every
+analysis is implemented twice, in R and Python, caught that. But a second
+implementation cannot catch a mistake both implementations share, and
+there was one. Both ordered events by action number, and the league's feed
+inserts late events with a high action number but an early clock. Those
+strays carried the end-of-quarter score back to the start of the final
+minute, which zeroed or shrank the window points of 15% of 2023-24
+team-periods and understated every estimate. An independent feed caught
+it: the NBA's own liveData play-by-play disagreed with the old window
+points, and agrees with the corrected ones on 99.9% of team-periods.
+Every season in this study is now checked against that second feed, and
+the README's correction note lists each published number next to its
+corrected value.</p>
 <h2 id="method-code-and-verification">Method, code, and verification</h2><p>The full technical write-up (data provenance, model specification, validation gates, and stated limitations) is the <a href="https://github.com/ismayc/playbyplay-study#readme">README</a>. The analysis is implemented independently in R and Python and reconciled to numeric tolerance; <code>run_checks.sh</code> replays every gate.</p>
 </main>
 <footer>Public data · dual-implementation reconciled · every gate scripted ·

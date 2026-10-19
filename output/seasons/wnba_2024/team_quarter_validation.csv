@@ -1,0 +1,5 @@
+check,value,threshold,passed
+every window joined to a team (nulls),0.0,0.0,true
+exactly 12 teams,0.0,0.0,true
+team windows sum to the committed window count,0.0,0.0,true
+league 2-for-1 rate reproduces committed table (abs diff),0.0,1e-12,true
