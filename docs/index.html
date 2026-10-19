@@ -161,6 +161,21 @@ details.terms summary { padding: .55rem .9rem; cursor: pointer;
   color: var(--ink-2); font-weight: 600; }
 details.terms ul { margin: 0; padding: .2rem 1.4rem .8rem; }
 details.terms li { margin: .3rem 0; color: var(--ink-2); }
+/* sticky section nav (study pages): the masthead scrolls away, this stays */
+.sectionnav { position: sticky; top: 0; z-index: 30; background: var(--surface);
+  border-bottom: 1px solid var(--rule); }
+.sectionnav .inner { width: min(1200px, 94vw); margin: 0 auto; display: flex;
+  gap: 1.3rem; overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  padding: .55rem 0 .45rem; }
+.sectionnav .inner::-webkit-scrollbar { display: none; }
+.sectionnav a { font-family: "Barlow Condensed", system-ui, sans-serif;
+  font-weight: 500; font-size: .95rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3); text-decoration: none;
+  padding-bottom: .15rem; border-bottom: 2px solid transparent; }
+.sectionnav a:hover { color: var(--ink); }
+.sectionnav a[aria-current="true"] { color: var(--accent-ink);
+  border-bottom-color: var(--accent); }
+main [id] { scroll-margin-top: 3.6rem; }
 /* hub cards */
 .cards { display: grid; grid-template-columns:
   repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
@@ -209,6 +224,7 @@ html.reveal .is-in { opacity: 1; transform: none; }
   <a href="https://github.com/ismayc/playbyplay-study">Code on GitHub</a>
   <button class="themebtn" type="button" aria-label="Toggle color theme">◐</button>
 </div></header>
+<nav class="sectionnav" aria-label="Sections"><div class="inner"><a href="#the-fingerprint">The fingerprint</a><a href="#the-payoff">The payoff</a><a href="#the-scouting-report">The scouting report</a><a href="#context-check">Context check</a><a href="#the-reconcile-gate">The reconcile gate</a><a href="#method-code-and-verification">Method</a></div></nav>
 <main>
 <div class="eyebrow">Full 2023-24 play-by-play</div>
 <h1>The <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is real, coaches actually do it, and the payoff is smaller than it looks</h1>
@@ -234,7 +250,7 @@ actually play the <abbr data-tip="Shooting early with 25-36 seconds left in a pe
 <div class="sub">Naive versus corrected estimate after a text-sort bug was caught.</div></div>
 </div>
 
-<div class="eyebrow beat">The fingerprint</div>
+<div class="eyebrow beat" id="the-fingerprint">The fingerprint</div>
 
 <h2>A spike at 31 seconds is a decision, not basketball</h2>
 <p>The first question has a sharp answer, and it comes from a discontinuity
@@ -248,7 +264,7 @@ team-periods per second, versus 147 in the 36–40 second band. That is
 Nothing in the flow of a basketball game produces a spike exactly there
 except a decision rule.</p>
 <figure class="figure-card"><iframe src="figures/fig1_first_shot_timing.html" loading="lazy" style="height:516px" title="First shot timing"></iframe><figcaption>When the first shot of the final minute goes up. This figure is the behavioral fingerprint: the spike at 31–33 seconds is the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> threshold made visible, and no smooth basketball process puts it there. The discontinuity, not the 78% share, is the proof that teams deliberately play the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>.</figcaption></figure>
-<div class="eyebrow beat">The payoff</div>
+<div class="eyebrow beat" id="the-payoff">The payoff</div>
 
 <h2>The extra possession is real. The edge is thinner than advertised.</h2>
 <p>So teams do it. Should they? Counting a team's own points, <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> windows
@@ -266,7 +282,7 @@ shooting early: you give up nothing, and the shot-quality cost is
 negligible. But the breathless version of the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> case does not
 survive its own accounting.</p>
 <figure class="figure-card"><iframe src="figures/fig2_efg_by_clock.html" loading="lazy" style="height:516px" title="Efg by clock"></iframe><figcaption>Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling <a href="https://ismayc.github.io/shot-quality-study/">shot-quality study</a> later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)</figcaption></figure>
-<div class="eyebrow beat">The scouting report</div>
+<div class="eyebrow beat" id="the-scouting-report">The scouting report</div>
 
 <h2>Everybody plays it. Sacramento just plays it hardest.</h2>
 <p>Two natural follow-ups deserve their own figures. First, who actually
@@ -276,7 +292,7 @@ windows, Chicago trails at 73%, and every team sits above 70%. This is a
 league-wide habit with team accents, not a strategy some teams run and
 others refuse.</p>
 <figure class="figure-card"><iframe src="figures/fig3_team_2for1.html" loading="lazy" style="height:656px" title="Team 2for1"></iframe><figcaption>Every team's <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> rate, sorted, with the league line marked. The scouting read: the spread from Sacramento (85%) to Chicago (73%) is about 12 points, so opponent tendency is worth knowing but nobody truly abstains. Hover a team for its window count and points outcomes.</figcaption></figure>
-<div class="eyebrow beat">Context check</div>
+<div class="eyebrow beat" id="context-check">Context check</div>
 
 <h2>The clock decides, not the quarter</h2>
 <p>Second, does the quarter matter? Almost not at all. The <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> rate is
@@ -287,7 +303,7 @@ The decision is driven by the clock, not the scoreboard or the stage of
 the game, at least through three quarters (the fourth is excluded by
 design, because endgame strategy changes everything).</p>
 <figure class="figure-card"><iframe src="figures/fig4_quarter_2for1.html" loading="lazy" style="height:356px" title="Quarter 2for1"></iframe><figcaption>Own points per window by quarter, <abbr data-tip="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr> versus hold. Necessary because "does context change the answer?" is the first question a coach asks: the bars barely move across quarters, so the recommendation survives without a quarter-by-quarter carve-out.</figcaption></figure>
-<div class="eyebrow beat">The reconcile gate</div>
+<div class="eyebrow beat" id="the-reconcile-gate">The reconcile gate</div>
 
 <h2>These numbers were wrong once. That is why you can trust them.</h2>
 <p>One methodological note belongs in the story rather than a footnote,
@@ -300,7 +316,7 @@ implemented twice, in R and Python, and reconciled to numeric tolerance
 before findings are written. The gap between the naive and corrected
 numbers (+0.36 → +0.58) is a permanent reminder of what the reconcile gate
 is for.</p>
-<h2>Method, code, and verification</h2><p>The full technical write-up (data provenance, model specification, validation gates, and stated limitations) is the <a href="https://github.com/ismayc/playbyplay-study#readme">README</a>. The analysis is implemented independently in R and Python and reconciled to numeric tolerance; <code>run_checks.sh</code> replays every gate.</p>
+<h2 id="method-code-and-verification">Method, code, and verification</h2><p>The full technical write-up (data provenance, model specification, validation gates, and stated limitations) is the <a href="https://github.com/ismayc/playbyplay-study#readme">README</a>. The analysis is implemented independently in R and Python and reconciled to numeric tolerance; <code>run_checks.sh</code> replays every gate.</p>
 </main>
 <footer>Public data · dual-implementation reconciled · every gate scripted ·
 <a href="https://github.com/ismayc/basketball-data-science">the family on GitHub</a></footer>
@@ -358,6 +374,46 @@ is for.</p>
   }, {threshold: 0.08, rootMargin: "0px 0px -6% 0px"});
   Array.prototype.forEach.call(els, function (el) { io.observe(el); });
   window.__revealReady = true;
+})();
+</script>
+<script>
+(function () {
+  var nav = document.querySelector(".sectionnav");
+  if (!nav) { return; }
+  var links = Array.prototype.slice.call(nav.querySelectorAll("a"));
+  var row = nav.querySelector(".inner");
+  var targets = links.map(function (a) {
+    return document.getElementById(a.getAttribute("href").slice(1));
+  });
+  var last = null;
+  function update() {
+    var edge = nav.getBoundingClientRect().bottom + 24, cur = -1;
+    targets.forEach(function (t, i) {
+      if (t && t.getBoundingClientRect().top <= edge) { cur = i; }
+    });
+    // At the foot of the page the last sections are too short to reach the
+    // bar, so the final one counts as current there.
+    var de = document.documentElement;
+    if (window.scrollY + window.innerHeight >= de.scrollHeight - 2) { cur = targets.length - 1; }
+    if (cur === last) { return; }
+    last = cur;
+    links.forEach(function (a, i) {
+      if (i === cur) { a.setAttribute("aria-current", "true"); }
+      else { a.removeAttribute("aria-current"); }
+    });
+    var a = links[cur];
+    if (a && row) {
+      var l = a.offsetLeft, r = l + a.offsetWidth;
+      if (l < row.scrollLeft || r > row.scrollLeft + row.clientWidth) {
+        row.scrollLeft = Math.max(0, l - 16);
+      }
+    }
+  }
+  // Straight from the event, not via requestAnimationFrame, which stalls in
+  // background tabs and offscreen frames; eight rect reads per scroll is cheap.
+  window.addEventListener("scroll", update, {passive: true});
+  window.addEventListener("resize", update);
+  update();
 })();
 </script>
 </body>
