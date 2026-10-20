@@ -24,7 +24,7 @@ across three NBA seasons, and the feared cost isn't there.
   with time to answer, which claws back part of the gain. On the fairest
   comparison we can make, the net edge is about **+0.2 points per
   quarter-end**, and over three seasons it is clearly above zero
-  (+0.23 [+0.10, +0.35]).
+  (+0.22 [+0.10, +0.34]).
 - **From real possession data:** the team that has the ball at the 40-second
   mark goes quick **84% of the time**; holding for the last shot is rare
   (24 times in 2023-24) but not disappearing (50 and 48 in the next two
@@ -44,8 +44,8 @@ Treatment: first FGA ≥ 32s. Outcomes: own points *and* net points via score
 deltas (FT-safe), with events in game-clock order. Bootstrap CIs (4,000 reps).
 Selection is the elephant: possession timing is not random, so we report a
 restricted 20–45s comparison. In 2023-24 both gaps survive it, own points
-+0.50 [+0.36, +0.64] and net +0.24 [+0.03, +0.44]; pooled over three NBA
-seasons the restricted net gap is +0.23 [+0.10, +0.35]. A possession-level
++0.49 [+0.36, +0.64] and net +0.24 [+0.03, +0.44]; pooled over three NBA
+seasons the restricted net gap is +0.22 [+0.10, +0.34]. A possession-level
 rebuild (pbpstats rows, built for every season and checked against the bulk
 archive) conditions on the team holding the ball at the 40s mark and splits
 by observed choice: quick 84.5% / normal 14.9% / hold 0.7% in 2023-24; quick

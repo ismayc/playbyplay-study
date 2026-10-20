@@ -11,6 +11,14 @@ bootstrapping (the published intervals had come from a run-dependent row
 order) and changed 05's "later possessions" to count possessions that used
 the ball.
 
+A second pass the same day applied three score-stamp rules found by
+elam-ending-study's endgame check against liveData: stamps only from made
+shots and free throws (Instant Replay rows carry stale stamps), only for the
+scoring side (a free-throw row can carry the other team's next score), and a
+per-team running maximum (same-instant free throws can sort out of order).
+Its own rows count the team-periods it changed against the first fix, across
+every league-season. The "corrected" column holds both passes.
+
 This writes every published headline quantity next to its corrected value.
 The published values are read from the last commit before the fix, so the
 table stays reproducible after later commits; 03_findings.py renders the
@@ -33,6 +41,10 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output"
 TABLE = OUT / "correction_2026-10-19.csv"
 PUBLISHED_COMMIT = "9456968"   # last commit before the fix (2026-10-19)
+FIRST_FIX_COMMIT = "936d282"   # the clock-order fix, before the score-stamp pass
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import seasons  # noqa: E402
 
 
 def published(name: str) -> pl.DataFrame:
@@ -80,6 +92,19 @@ def rows() -> list[dict]:
     add("team_periods", j.height, j.height)
     add("team_periods_points_changed", 0,
         int((j["points"] != j["points_new"]).sum()))
+
+    # Second pass, same day: the score-stamp rules, against the first fix as
+    # committed (FIRST_FIX_COMMIT), across every league-season.
+    total = changed = 0
+    for lg, ssn in seasons.SEASONS:
+        rel = (seasons.out_dir(lg, ssn) / "team_period_windows.csv").relative_to(ROOT)
+        blob = subprocess.run(["git", "-C", str(ROOT), "show", f"{FIRST_FIX_COMMIT}:{rel}"],
+                              capture_output=True, check=True).stdout
+        a = pl.read_csv(io.BytesIO(blob)).join(pl.read_csv(ROOT / rel), on=k, suffix="_new")
+        total += a.height
+        changed += int((a["points"] != a["points_new"]).sum())
+    add("second_pass_team_periods", total, total)
+    add("second_pass_points_changed", 0, changed)
     return out
 
 

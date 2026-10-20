@@ -13,9 +13,13 @@ import pytest
 
 
 def _raw(rows):
-    """Minimal PlayByPlayV3-shaped frame (all-text columns, like the feed)."""
-    cols = ["gameId", "actionNumber", "clock", "period", "isFieldGoal",
+    """Minimal PlayByPlayV3-shaped frame (all-text columns, like the feed).
+    A row's actionType defaults to "Made Shot" when shotResult is "Made";
+    free throws and other events say what they are."""
+    cols = ["gameId", "actionNumber", "clock", "period", "actionType", "isFieldGoal",
             "shotResult", "shotValue", "scoreHome", "scoreAway", "location"]
+    rows = [{"actionType": "Made Shot" if r.get("shotResult") == "Made" else "", **r}
+            for r in rows]
     return pl.DataFrame({c: [str(r.get(c, "")) for r in rows] for c in cols})
 
 
@@ -47,15 +51,19 @@ def test_late_inserted_event_does_not_zero_the_window(pbp):
     # event "with more than 60s left" was a stray carrying 21-25, so the
     # window read 0 points for the visitors. In clock order it reads 3.
     rows = [
+        {"gameId": "1", "actionNumber": "138", "clock": "PT01M07.00S", "period": "1",
+         "actionType": "Free Throw", "isFieldGoal": "0", "scoreHome": "21",
+         "scoreAway": "20", "location": "h"},
         {"gameId": "1", "actionNumber": "139", "clock": "PT01M06.00S", "period": "1",
-         "isFieldGoal": "0", "scoreHome": "21", "scoreAway": "22", "location": "v"},
+         "actionType": "Free Throw", "isFieldGoal": "0", "scoreHome": "21",
+         "scoreAway": "22", "location": "v"},
         {"gameId": "1", "actionNumber": "140", "clock": "PT01M03.00S", "period": "1",
          "isFieldGoal": "0", "location": "h"},
         {"gameId": "1", "actionNumber": "148", "clock": "PT00M19.20S", "period": "1",
          "isFieldGoal": "1", "shotResult": "Made", "shotValue": "3",
          "scoreHome": "21", "scoreAway": "25", "location": "v"},
         {"gameId": "1", "actionNumber": "152", "clock": "PT00M00.00S", "period": "1",
-         "isFieldGoal": "0", "scoreHome": "21", "scoreAway": "25"},
+         "actionType": "period", "isFieldGoal": "0", "scoreHome": "21", "scoreAway": "25"},
         {"gameId": "1", "actionNumber": "244", "clock": "PT05M05.00S", "period": "1",
          "isFieldGoal": "0", "location": "h"},
         {"gameId": "1", "actionNumber": "246", "clock": "PT05M04.00S", "period": "1",
@@ -67,6 +75,40 @@ def test_late_inserted_event_does_not_zero_the_window(pbp):
     assert (stray["score_h"], stray["score_a"]) == (0.0, 0.0)
     pts = {r["location"]: r["points"] for r in pbp.window_points(df).iter_rows(named=True)}
     assert pts == {"h": 0.0, "v": 3.0}
+
+
+def _stamped(n, clock, kind, loc, h, a):
+    return {"gameId": "1", "actionNumber": str(n), "clock": clock, "period": "4",
+            "actionType": kind, "isFieldGoal": "0", "scoreHome": h, "scoreAway": a,
+            "location": loc}
+
+
+def test_instant_replay_stamp_is_ignored(pbp):
+    # 0022300010: a replay row reads 53-44 right after free throws made it 55-44.
+    df = pbp.prepare_events(_raw([
+        _stamped(1, "PT04M17.00S", "Free Throw", "h", "55", "44"),
+        _stamped(2, "PT04M17.00S", "Instant Replay", "", "53", "44"),
+    ]))
+    assert df["score_h"].to_list() == [55.0, 55.0]
+
+
+def test_stamp_sets_only_the_scoring_side(pbp):
+    # 0022500527: a home free throw stamped 93-91 while the visitors were on 89.
+    df = pbp.prepare_events(_raw([
+        _stamped(1, "PT04M43.00S", "Made Shot", "v", "91", "89"),
+        _stamped(2, "PT04M32.00S", "Free Throw", "h", "93", "91"),
+    ]))
+    assert list(zip(df["score_h"], df["score_a"])) == [(0.0, 89.0), (93.0, 89.0)]
+
+
+def test_out_of_order_same_instant_free_throws(pbp):
+    # 0022300055: a technical free throw stamped 124 sorts after the and-one
+    # free throw stamped 126 at one clock reading; the score stays 126.
+    df = pbp.prepare_events(_raw([
+        _stamped(647, "PT03M54.00S", "Free Throw", "h", "126", "103"),
+        _stamped(655, "PT03M54.00S", "Free Throw", "h", "124", "103"),
+    ]))
+    assert df["score_h"].to_list() == [126.0, 126.0]
 
 
 def test_clock_parse(pbp):
@@ -84,11 +126,15 @@ def test_team_period_table_is_sorted(pbp):
     for g in ("2", "1"):
         rows += [
             {"gameId": g, "actionNumber": "1", "clock": "PT01M30.00S", "period": "1",
-             "isFieldGoal": "0", "scoreHome": "10", "scoreAway": "10", "location": "h"},
-            {"gameId": g, "actionNumber": "2", "clock": "PT00M40.00S", "period": "1",
+             "actionType": "Free Throw", "isFieldGoal": "0", "scoreHome": "10",
+             "scoreAway": "9", "location": "h"},
+            {"gameId": g, "actionNumber": "2", "clock": "PT01M20.00S", "period": "1",
+             "actionType": "Free Throw", "isFieldGoal": "0", "scoreHome": "10",
+             "scoreAway": "10", "location": "v"},
+            {"gameId": g, "actionNumber": "3", "clock": "PT00M40.00S", "period": "1",
              "isFieldGoal": "1", "shotResult": "Made", "shotValue": "2",
              "scoreHome": "10", "scoreAway": "12", "location": "v"},
-            {"gameId": g, "actionNumber": "3", "clock": "PT00M10.00S", "period": "1",
+            {"gameId": g, "actionNumber": "4", "clock": "PT00M10.00S", "period": "1",
              "isFieldGoal": "1", "shotResult": "Missed", "shotValue": "3",
              "location": "h"},
         ]

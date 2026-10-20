@@ -117,10 +117,8 @@ def prepare_events(df: pl.DataFrame) -> pl.DataFrame:
         is_fga=(pl.col("isFieldGoal") == "1"),
         made=(pl.col("shotResult") == "Made"),
         shot_value=pl.col("shotValue").cast(pl.Float64, strict=False),
-        score_h=pl.when(pl.col("scoreHome") == "").then(None)
-                  .otherwise(pl.col("scoreHome")).cast(pl.Float64, strict=False),
-        score_a=pl.when(pl.col("scoreAway") == "").then(None)
-                  .otherwise(pl.col("scoreAway")).cast(pl.Float64, strict=False),
+        score_h=stamp("h", "scoreHome"),
+        score_a=stamp("v", "scoreAway"),
     # GAME-CLOCK order, actionNumber only to break ties. The feed inserts late
     # events (logged after the fact) with a high actionNumber but an early
     # clock: in 0022300002 events 244-246 sit in period 1 at 5:05 left, after
@@ -132,18 +130,27 @@ def prepare_events(df: pl.DataFrame) -> pl.DataFrame:
     ).sort(["gameId", "period", "secs_left", "actionNumber"],
            descending=[False, False, True, False], nulls_last=True)
 
-    # Scores are only stamped on scoring events; carry them forward so every event
-    # knows the current score. Periods start from the running game score, so the
-    # fill must run across the whole game, not within period. The fill runs in
-    # clock order, so a late-inserted event inherits the score of its game time.
+    # The running score, carried across the whole game (periods start from the
+    # running total) in clock order, as a per-team running maximum of the
+    # stamps stamp() keeps. A plain forward fill of every stamp left a wrong
+    # score somewhere in about 6% of games (second 2026-10-19 correction,
+    # found by elam-ending-study's endgame check against liveData): Instant
+    # Replay rows carry a stale stamp (window "points" of -18 in 0022500232
+    # Q3), free throws at one clock reading can sort out of order, and a
+    # free-throw row can carry the other team's next score.
     df = df.with_columns(
-        score_h=pl.col("score_h").fill_null(strategy="forward").over("gameId"),
-        score_a=pl.col("score_a").fill_null(strategy="forward").over("gameId"),
-    ).with_columns(
-        score_h=pl.col("score_h").fill_null(0.0),
-        score_a=pl.col("score_a").fill_null(0.0),
+        score_h=pl.col("score_h").fill_null(0.0).cum_max().over("gameId"),
+        score_a=pl.col("score_a").fill_null(0.0).cum_max().over("gameId"),
     )
     return df.filter(pl.col("secs_left").is_not_null())
+
+
+def stamp(side: str, column: str) -> pl.Expr:
+    """A score stamp only where the row is a made shot or free throw by that
+    side (location "h" or "v"); null elsewhere."""
+    scoring = (pl.col("actionType").str.strip_chars().is_in(["Made Shot", "Free Throw"])
+               & (pl.col("location") == side) & (pl.col(column) != ""))
+    return pl.when(scoring).then(pl.col(column)).cast(pl.Float64, strict=False)
 
 
 def window_points(df: pl.DataFrame) -> pl.DataFrame:

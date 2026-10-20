@@ -128,32 +128,37 @@ def team_tricodes(league: str, season: str) -> pl.DataFrame:
 
 
 def v3_events(league: str = "nba", season: str = "2023-24") -> pl.DataFrame:
-    """V3 events in game-clock order with forward-filled scores (both 02 fixes
-    apply: numeric actionNumber, and clock order so late-inserted events do
-    not carry a later score into the 40-second mark)."""
+    """V3 events in game-clock order with running scores, by the same rules
+    as 02_analysis.prepare_events: numeric actionNumber, clock order so
+    late-inserted events do not carry a later score into the 40-second mark,
+    and the score-stamp rules of the second 2026-10-19 correction (stamps
+    only from made shots and free throws, only for the scoring side, per-team
+    running maximum)."""
     files = seasons.raw_files(league, season)
     mins = pl.col("clock").str.extract(r"PT(\d+)M", 1).cast(pl.Float64)
     secs = pl.col("clock").str.extract(r"M([\d.]+)S", 1).cast(pl.Float64)
+    scoring = pl.col("actionType").str.strip_chars().is_in(["Made Shot", "Free Throw"])
+
+    def stamp(side: str, column: str) -> pl.Expr:
+        keep = scoring & (pl.col("location") == side) & (pl.col(column) != "")
+        return pl.when(keep).then(pl.col(column)).cast(pl.Float64, strict=False)
+
     df = (pl.scan_parquet(files)
-          .select("gameId", "actionNumber", "clock", "period",
+          .select("gameId", "actionNumber", "clock", "period", "actionType",
                   "scoreHome", "scoreAway", "teamTricode", "location")
           .with_columns(
               period=pl.col("period").cast(pl.Int32),
               actionNumber=pl.col("actionNumber").cast(pl.Int64),
               secs_left=mins * 60 + secs,
-              score_h=pl.when(pl.col("scoreHome") == "").then(None)
-              .otherwise(pl.col("scoreHome")).cast(pl.Float64, strict=False),
-              score_a=pl.when(pl.col("scoreAway") == "").then(None)
-              .otherwise(pl.col("scoreAway")).cast(pl.Float64, strict=False),
+              score_h=stamp("h", "scoreHome"),
+              score_a=stamp("v", "scoreAway"),
           )
           .sort(["gameId", "period", "secs_left", "actionNumber"],
                 descending=[False, False, True, False], nulls_last=True)
           .with_columns(
-              score_h=pl.col("score_h").fill_null(strategy="forward").over("gameId"),
-              score_a=pl.col("score_a").fill_null(strategy="forward").over("gameId"),
+              score_h=pl.col("score_h").fill_null(0.0).cum_max().over("gameId"),
+              score_a=pl.col("score_a").fill_null(0.0).cum_max().over("gameId"),
           )
-          .with_columns(score_h=pl.col("score_h").fill_null(0.0),
-                        score_a=pl.col("score_a").fill_null(0.0))
           .filter(pl.col("secs_left").is_not_null())
           .collect())
     return df

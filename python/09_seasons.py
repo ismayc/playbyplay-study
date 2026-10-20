@@ -174,6 +174,10 @@ def figures(summary: pl.DataFrame, pooled: pl.DataFrame) -> None:
                       title="Who still holds? The 2-for-1 decision by league-season")
     fig.write_html(FIG / "fig5_quick_share_by_season.html", include_plotlyjs="cdn")
 
+    # The season labels: the fig5 rewrite (per-league traces) dropped the list
+    # this loop read, so a full run died here while --check, which skips the
+    # figures, kept passing.
+    labels = [seasons.label(r["league"], r["season"]) for r in summary.iter_rows(named=True)]
     rows = [(lab, r["net_gap_restricted"], r["net_gap_restricted_lo"],
              r["net_gap_restricted_hi"])
             for lab, r in zip(labels, summary.iter_rows(named=True))

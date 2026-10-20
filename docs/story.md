@@ -57,7 +57,7 @@ the ball early is a different kind of team-period. On net points, in the
 comparable-sample analysis, the edge shrinks to +0.24 per opportunity
 (95% CI [+0.03, +0.44]): the opponent's reply claws back about half of the
 gain, but not all of it. Pooled over three NBA seasons that net edge is
-+0.23 [+0.10, +0.35], clearly above zero. The decision favors shooting
++0.22 [+0.10, +0.34], clearly above zero. The decision favors shooting
 early: you give up nothing on shot quality, and you keep a real, if
 modest, edge after the opponent answers.
 
@@ -141,7 +141,12 @@ strays carried the end-of-quarter score back to the start of the final
 minute, which zeroed or shrank the window points of 15% of 2023-24
 team-periods and understated every estimate. An independent feed caught
 it: the NBA's own liveData play-by-play disagreed with the old window
-points, and agrees with the corrected ones on 99.9% of team-periods.
+points, and agrees with the corrected ones on 100.0% of team-periods.
+A second pass the same day, prompted by the
+[Elam Ending study](https://github.com/ismayc/elam-ending-study)'s own check
+against that feed, fixed how scores are read: Instant Replay rows carried
+stale scores, and free throws at one clock reading could arrive out of
+order. It changed 28 more team-periods across all six league-seasons.
 Every season in this study is now checked against that second feed, and
 the README's correction note lists each published number next to its
 corrected value.

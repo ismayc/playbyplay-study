@@ -12,20 +12,27 @@ then repeats it on two more NBA seasons and three WNBA seasons.
 > **Correction, October 19, 2026.** The 2023-24 window points were computed
 > with events in action-number order. The feed inserts late events with a high
 > action number but an early clock, and those carried the period-end score back
-> to the start of the window, so 1,085 of 7,221 team-periods
+> to the start of the window, so 1,089 of 7,221 team-periods
 > (15%) had wrong window points. An independent feed (the
 > NBA's liveData play-by-play) exposed it; events are now in game-clock order,
 > and every season is checked against that feed. Every estimate moved in the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>'s favor.
 > Published → corrected (95% <abbr title="Confidence interval.">CI</abbr>):
 >
-> - Own-points gap: +0.579 [+0.476, +0.680] → **+0.777 [+0.680, +0.876]**
-> - Net-points gap: +0.679 [+0.541, +0.818] → **+0.828 [+0.673, +0.979]**
-> - Restricted net gap: +0.188 [-0.002, +0.378] → **+0.236 [+0.030, +0.442]**
+> - Own-points gap: +0.579 [+0.476, +0.680] → **+0.778 [+0.680, +0.876]**
+> - Net-points gap: +0.679 [+0.541, +0.818] → **+0.828 [+0.672, +0.980]**
+> - Restricted net gap: +0.188 [-0.002, +0.378] → **+0.235 [+0.029, +0.441]**
 > - Quick minus hold (decision team): +0.69 [+0.23, +1.20] → **+0.92 [+0.35, +1.51]**
 >
 > The restricted net gap's interval now excludes zero, which reverses the earlier conclusion that one season could not distinguish it from zero. The
 > same change sorts each table before bootstrapping, since the published
-> intervals came from a row order that changed between runs. Full table:
+> intervals came from a row order that changed between runs.
+>
+> A second pass the same day fixed how scores are read from the feed: only
+> made shots and free throws set the score, each only for the scoring team,
+> and the score never falls (Instant Replay rows carried stale scores, and
+> free throws at one clock reading could arrive out of order). It changed
+> 28 of 26,523 team-periods across all six league-seasons
+> (0.11%); the figures above include it. Full table:
 > `output/correction_2026-10-19.csv`.
 <!-- /gen:correction -->
 
@@ -206,20 +213,20 @@ See `figures/fig1_first_shot_timing.png`.
 | | First shot ≥ 32s (<abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>) | First shot < 32s (held) |
 |---|---|---|
 | Team-periods | 5,614 | 1,607 |
-| Mean points in window | **2.886** | **2.109** |
-| Mean opponent points | **2.682** | **2.733** |
+| Mean points in window | **2.886** | **2.108** |
+| Mean opponent points | **2.682** | **2.732** |
 | Mean **net** points | **+0.204** | **-0.624** |
 | Mean field-goal attempts | **2.47** | **1.52** |
 | Effective FG% | **0.506** | **0.436** |
 
-Own-points difference: **+0.777** per team-period
+Own-points difference: **+0.778** per team-period
 (95% bootstrap <abbr title="Confidence interval.">CI</abbr> [+0.680, +0.876], excludes zero,
 4,000 resamples).
 
 **Why net matters:** the case for holding the ball is precisely that it denies
 the opponent a reply, so an outcome that only counts a team's own points misses
 half the trade. On net points the raw gap is **+0.828**
-(95% <abbr title="Confidence interval.">CI</abbr> [+0.673, +0.979]). But read the
+(95% <abbr title="Confidence interval.">CI</abbr> [+0.672, +0.980]). But read the
 sensitivity analysis below before taking either raw gap at face value, because
 the "held" group includes many team-periods where the *opponent* controlled the
 window.
@@ -230,7 +237,7 @@ possession, showing up exactly where it should.
 
 ### Sensitivity: narrowing the selection gap
 
-Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.495** (95% <abbr title="Confidence interval.">CI</abbr> [+0.359, +0.636], excludes zero) and the net gap is **+0.236** (95% <abbr title="Confidence interval.">CI</abbr> [+0.030, +0.442], excludes zero; n = 2,199 vs 842).
+Restricting to team-periods whose first shot came between 20 and 45 seconds (so both groups had the ball at broadly similar times), the own-points gap is **+0.495** (95% <abbr title="Confidence interval.">CI</abbr> [+0.359, +0.636], excludes zero) and the net gap is **+0.235** (95% <abbr title="Confidence interval.">CI</abbr> [+0.029, +0.441], excludes zero; n = 2,199 vs 842).
 
 Both gaps shrink under the restriction, which is what you would expect if part of the headline gap is selection rather than strategy. The own-points advantage survives, and so does the net advantage, though at 48% of the own-points size: the extra possession is real, and the opponent's reply claws back part of its value.
 
@@ -335,22 +342,22 @@ the quick/normal/hold call agrees on at least 100.0% of decision periods).
 | League-season | Games | First shot ≥ 32s | 31-33s spike | Quick share | Holds | Restricted net gap [95% <abbr title="Confidence interval.">CI</abbr>] | Quick minus hold, net [95% <abbr title="Confidence interval.">CI</abbr>] |
 |---|---|---|---|---|---|---|---|
 | NBA 2023-24 | 1,230 | 77.7% | 1.37 | 84.5% | 24 | +0.24 [+0.03, +0.44] | +0.92 [+0.37, +1.54] |
-| NBA 2024-25 | 1,230 | 78.5% | 1.27 | 82.4% | 50 | +0.13 [-0.08, +0.34] | +0.77 [+0.32, +1.23] |
-| NBA 2025-26 | 1,230 | 78.0% | 1.19 | 83.0% | 48 | +0.31 [+0.10, +0.52] | +0.42 [-0.11, +0.96] |
+| NBA 2024-25 | 1,230 | 78.5% | 1.27 | 82.4% | 50 | +0.13 [-0.08, +0.33] | +0.77 [+0.32, +1.23] |
+| NBA 2025-26 | 1,230 | 78.0% | 1.19 | 83.0% | 48 | +0.30 [+0.09, +0.52] | +0.42 [-0.12, +0.96] |
 | WNBA 2024 | 240 | 74.8% | 0.79 | 76.4% | 16 | +0.47 [+0.01, +0.92] | +1.25 [+0.51, +2.00] |
 | WNBA 2025 | 286 | 72.0% | 0.65 | 78.3% | 16 | -0.32 [-0.70, +0.07] | +0.62 [-0.36, +1.54] |
-| WNBA 2026 | 330 | 73.8% | 0.86 | 76.4% | 19 | -0.36 [-0.74, +0.03] | +0.31 [-0.35, +1.00] |
+| WNBA 2026 | 330 | 73.8% | 0.86 | 76.4% | 19 | -0.36 [-0.73, +0.04] | +0.32 [-0.35, +1.00] |
 
 Pooled within each league (bootstrap 95% CIs; the R implementation reproduces
 the window estimates, `python/04_reconcile.py --pooled`):
 
 | Seasons | Own-points gap | Net gap | Restricted net gap | Quick minus hold, net |
 |---|---|---|---|---|
-| NBA 2023-24 to 2025-26 | +0.75 [+0.69, +0.81] | +0.81 [+0.72, +0.90] | +0.23 [+0.10, +0.35] | +0.65 [+0.33, +0.95] |
-| WNBA 2024 to 2026 | +0.52 [+0.40, +0.63] | +0.56 [+0.40, +0.72] | -0.13 [-0.36, +0.11] | +0.71 [+0.25, +1.18] |
+| NBA 2023-24 to 2025-26 | +0.75 [+0.70, +0.81] | +0.81 [+0.72, +0.90] | +0.22 [+0.10, +0.34] | +0.65 [+0.33, +0.95] |
+| WNBA 2024 to 2026 | +0.54 [+0.43, +0.65] | +0.56 [+0.40, +0.72] | -0.13 [-0.36, +0.11] | +0.71 [+0.25, +1.18] |
 
 1. **NBA.** **The quick rate is not still rising** (82.4% to 84.5% across the three seasons), and **holds are not going extinct**: 24, 50, 48 in 2023-24, 2024-25 and 2025-26. The bunching at the 32-second threshold is fading: the 31-33s spike fell from 1.37× to 1.19× the 36-40s rate.
-2. **NBA, the open question from one season.** Pooled over three seasons, the restricted-sample net gap is **+0.225 [+0.103, +0.346]**, which excludes zero: the question one season left open is settled in the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>'s favor. Quick minus hold
+2. **NBA, the open question from one season.** Pooled over three seasons, the restricted-sample net gap is **+0.223 [+0.100, +0.344]**, which excludes zero: the question one season left open is settled in the <abbr title="Shooting early with 25-36 seconds left in a period so your team gets two possessions to the opponent's one before the buzzer.">2-for-1</abbr>'s favor. Quick minus hold
    on the decision-team design pools to
    **+0.65 [+0.33, +0.95]** net points over
    122 holds.
@@ -369,5 +376,5 @@ partway through the NBA 2024-25 harvest, so 2,327 games came from
 the V3 archive instead (`python/01b_import_v3_archive.py`; on the
 601 games both sources had, all 3,508 team-periods matched in the window table). Every
 season's window points were then checked against an independent feed, the
-NBA's liveData play-by-play: they agree on 99.80% to 99.94% of
+NBA's liveData play-by-play: they agree on 99.93% to 100.00% of
 team-periods (`python/10_check_sources.py`).

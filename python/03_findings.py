@@ -442,6 +442,8 @@ def correction_note() -> str:
 
     changed = int(c["team_periods_points_changed"]["corrected"])
     total = int(c["team_periods"]["corrected"])
+    changed2 = int(c["second_pass_points_changed"]["corrected"])
+    total2 = int(c["second_pass_team_periods"]["corrected"])
     heads = ["own_gap", "net_gap", "net_gap_restricted", "quick_minus_hold"]
     direction = ("Every estimate moved in the 2-for-1's favor." if
                  all(c[q]["change"] > 0 for q in heads) else
@@ -475,7 +477,14 @@ def correction_note() -> str:
 >
 > {zero} The
 > same change sorts each table before bootstrapping, since the published
-> intervals came from a row order that changed between runs. Full table:
+> intervals came from a row order that changed between runs.
+>
+> A second pass the same day fixed how scores are read from the feed: only
+> made shots and free throws set the score, each only for the scoring team,
+> and the score never falls (Instant Replay rows carried stale scores, and
+> free throws at one clock reading could arrive out of order). It changed
+> {changed2} of {total2:,} team-periods across all six league-seasons
+> ({changed2 / total2:.2%}); the figures above include it. Full table:
 > `output/correction_2026-10-19.csv`.
 """
 

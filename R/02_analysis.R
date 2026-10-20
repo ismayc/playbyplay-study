@@ -72,8 +72,15 @@ events <- events %>%
     is_fga = isFieldGoal == "1",
     made = shotResult == "Made",
     shot_value = suppressWarnings(as.numeric(shotValue)),
-    score_h = suppressWarnings(as.numeric(if_else(scoreHome == "", NA_character_, scoreHome))),
-    score_a = suppressWarnings(as.numeric(if_else(scoreAway == "", NA_character_, scoreAway)))
+    # Score stamps only from made shots and free throws, and only for the
+    # scoring side (second 2026-10-19 correction): Instant Replay rows carry
+    # a stale stamp, and a free-throw row can carry the other team's next
+    # score.
+    scoring = trimws(actionType) %in% c("Made Shot", "Free Throw"),
+    score_h = suppressWarnings(as.numeric(if_else(scoring & location == "h" & scoreHome != "",
+                                                  scoreHome, NA_character_))),
+    score_a = suppressWarnings(as.numeric(if_else(scoring & location == "v" & scoreAway != "",
+                                                  scoreAway, NA_character_)))
   ) %>%
   # Game-clock order, action number only to break ties: the feed inserts
   # late events with a high action number but an early clock (0022300002
@@ -82,12 +89,13 @@ events <- events %>%
   # start. Fixed 2026-10-19 after the NBA liveData feed disagreed on 15% of
   # 2023-24 windows; see python/02_analysis.py and 10_check_sources.py.
   arrange(gameId, period, desc(secs_left), action_num) %>%
-  # Scores are only stamped on scoring events; carry forward across the whole
-  # game (periods start from the running total, so not within period).
+  # The running score across the whole game (periods start from the running
+  # total) as a per-team running maximum: free throws at one clock reading
+  # can sort out of order, and a score never falls.
   group_by(gameId) %>%
-  fill(score_h, score_a, .direction = "down") %>%
+  mutate(score_h = cummax(replace_na(score_h, 0)),
+         score_a = cummax(replace_na(score_a, 0))) %>%
   ungroup() %>%
-  mutate(score_h = replace_na(score_h, 0), score_a = replace_na(score_a, 0)) %>%
   filter(!is.na(secs_left))
 
 message(sprintf("Loaded %s events from %s games",

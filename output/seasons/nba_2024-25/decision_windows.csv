@@ -1660,7 +1660,7 @@ game_id,PERIOD,offense,behavior,start_secs,end_secs,n_later_poss,net
 22400553,3,LAC,quick,50.0,32.0,1,5.0
 22400554,1,CLE,quick,55.0,36.0,1,2.0
 22400554,2,CLE,quick,58.0,38.0,1,-2.0
-22400554,3,CLE,quick,49.0,36.0,1,1.0
+22400554,3,CLE,quick,49.0,36.0,1,-0.0
 22400555,1,OKC,normal,44.0,26.0,0,1.0
 22400555,2,OKC,normal,54.0,24.0,1,2.0
 22400555,3,PHI,quick,49.0,35.0,2,6.0
@@ -2473,7 +2473,7 @@ game_id,PERIOD,offense,behavior,start_secs,end_secs,n_later_poss,net
 22400824,3,BKN,quick,57.0,35.0,1,1.0
 22400825,1,MIA,normal,47.0,24.0,1,-1.0
 22400825,2,ATL,quick,42.0,34.0,1,2.0
-22400825,3,MIA,quick,56.0,36.0,1,1.0
+22400825,3,MIA,quick,56.0,36.0,1,2.0
 22400826,1,OKC,quick,46.0,39.0,1,0.0
 22400826,2,OKC,quick,46.0,33.0,1,3.0
 22400826,3,MIN,quick,54.0,38.0,1,-3.0
@@ -3239,7 +3239,7 @@ game_id,PERIOD,offense,behavior,start_secs,end_secs,n_later_poss,net
 22401080,1,SAS,quick,60.0,33.0,0,0.0
 22401080,2,SAS,quick,46.0,28.0,1,-2.0
 22401080,3,SAS,quick,53.0,39.0,2,1.0
-22401081,1,CLE,quick,52.0,34.0,2,-2.0
+22401081,1,CLE,quick,52.0,34.0,2,-3.0
 22401081,2,CLE,quick,50.0,29.0,1,-2.0
 22401081,3,CLE,quick,53.0,32.0,1,5.0
 22401082,1,NYK,quick,52.0,39.0,2,4.0

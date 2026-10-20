@@ -117,7 +117,7 @@ game_id,PERIOD,offense,behavior,start_secs,end_secs,n_later_poss,net
 1022500039,2,ATL,normal,41.0,25.0,1,-2.0
 1022500039,3,SEA,quick,53.0,32.0,1,0.0
 1022500040,1,CHI,normal,45.0,25.0,0,1.0
-1022500040,2,CHI,quick,44.0,31.0,1,-1.0
+1022500040,2,CHI,quick,44.0,31.0,1,-0.0
 1022500040,3,CHI,normal,55.0,27.0,1,-2.0
 1022500041,1,NYL,quick,47.0,39.0,1,0.0
 1022500041,2,CON,quick,51.0,30.0,0,-1.0
