@@ -23,6 +23,12 @@ WNBA seasons then test whether the answer holds.
 <div class="sub">Of 2023-24 windows had wrong points until an independent feed caught an ordering bug.</div></div>
 </div>
 
+Both questions are read off the final minute of a quarter. The diagram below
+marks the clock points the study uses on one real 2-for-1, and shows how the
+team with the ball is sorted by what it chose.
+
+{{svg:dg1_final_minute|The final minute of a quarter. Top: the window, the decision mark, and the 2-for-1 threshold, with one real 2-for-1 drawn on them; the team that shot early got the ball back. Bottom: how the team with the ball at the decision mark is sorted by when its possession ends. Quick teams got about one more possession; holds almost never did.}}
+
 <div class="eyebrow beat">The fingerprint</div>
 
 ## A spike at 31 seconds is a decision, not basketball
@@ -61,7 +67,9 @@ gain, but not all of it. Pooled over three NBA seasons that net edge is
 early: you give up nothing on shot quality, and you keep a real, if
 modest, edge after the opponent answers.
 
-{{fig:fig2_efg_by_clock|Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the 2-for-1 is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, essentially free.)}}
+{{svg:dg2_own_to_net|How the own-points headline becomes the fair comparison, one step at a time. Comparing only team-periods that had the ball at similar times removes part of the gap as selection; subtracting the opponent's reply removes about half of what is left; pooling three NBA seasons narrows the interval and leaves it above zero.}}
+
+{{fig:fig2_efg_by_clock|Shooting efficiency by seconds left on the clock. Necessary because the standard objection to the 2-for-1 is that the early shot is a rushed, bad shot. This figure shows efficiency in the 25–36 second launch window sits at normal levels, so the extra possession is not being bought with junk offense. (The sibling shot-quality study later re-priced this window with a full shot model and confirmed it: about −0.8 points per 100 shots, close to free.)}}
 
 <div class="eyebrow beat">The scouting report</div>
 
@@ -142,6 +150,10 @@ minute, which zeroed or shrank the window points of 15% of 2023-24
 team-periods and understated every estimate. An independent feed caught
 it: the NBA's own liveData play-by-play disagreed with the old window
 points, and agrees with the corrected ones on 100.0% of team-periods.
+The diagram below shows the mistake on one real period.
+
+{{svg:dg3_event_order|The first correction on one real period. In action-number order, plays logged late came after the end of the period, so the window opened and closed on the same score and the three the Knicks made in the final minute counted for nothing. In game-clock order the window holds that three.}}
+
 A second pass the same day, prompted by the
 [Elam Ending study](https://github.com/ismayc/elam-ending-study)'s own check
 against that feed, fixed how scores are read: Instant Replay rows carried

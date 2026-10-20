@@ -40,5 +40,9 @@ echo "=== correction: published vs corrected table reproduces ==="
 $PY python/11_correction.py --check | tail -1
 
 echo
+echo "=== diagrams: every explainer SVG rebuilds identically ==="
+$PY -I python/12_diagrams.py --check | tail -1
+
+echo
 echo "=== findings: README numbers regenerate from outputs ==="
 $PY python/03_findings.py --check | tail -1
